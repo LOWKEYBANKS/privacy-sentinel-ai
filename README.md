@@ -91,7 +91,8 @@ This project is licensed under the Apache License 2.0 — you’re free to use, 
 
 🧠 Maintainers
 
-Lead: "@LOWKEYBANKS" (https://github.com/LOWKEYBANKS)
+Lead: "@LOWKEYBANKS" (https://github.com/LOWKEYBANKS) 
+Lead: "@Ms-Lorrah" (https://github.com/Ms-Lorrah)
 Project: Privacy Sentinel AI
 Stack: Mistral / n8n / FastAPI / Electron / Flutter / LangChain
 
