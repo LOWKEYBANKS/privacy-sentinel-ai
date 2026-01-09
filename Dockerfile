@@ -9,7 +9,7 @@ WORKDIR /app
 
 # System dependencies
 RUN apt-get update && apt-get install -y \
-    gcc g++ libffi-dev libssl-dev \
+    gcc g++ libffi-dev libssl-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -26,4 +26,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 EXPOSE 8000
 USER privacy-sentinel
-CMD ["uvicorn", "agent.api.summarizer:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "web-scanner.main:app", "--host", "0.0.0.0", "--port", "8000"]

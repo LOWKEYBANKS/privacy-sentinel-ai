@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Sentinel AI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <img src="icons/icon48.png" alt="Logo" class="logo">
+                <h1>Privacy Sentinel</h1>
+            </div>
+            <div class="status-badge" id="status-badge">Ready</div>
+        </header>
+
+        <main>
+            <div class="scan-section">
+                <button id="scan-btn" class="primary-btn">
+                    <span class="icon">🔍</span> Scan Current Page
+                </button>
+            </div>
+
+            <div id="results-area" class="results-area hidden">
+                <div class="risk-meter">
+                    <div class="risk-score">
+                        <span id="score-value">--</span>
+                        <span class="label">Risk Score</span>
+                    </div>
+                    <div class="risk-level" id="risk-level">--</div>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Summary</h3>
+                    <p id="summary-text">No scan data available.</p>
+                </div>
+
+                <div class="details-list">
+                    <h3>Detected Risks</h3>
+                    <ul id="risks-list">
+                        <!-- Risks will be populated here -->
+                    </ul>
+                </div>
+            </div>
+
+            <div id="loading-area" class="loading-area hidden">
+                <div class="spinner"></div>
+                <p>Analyzing Privacy Policy...</p>
+            </div>
+
+            <div id="error-area" class="error-area hidden">
+                <p id="error-message">An error occurred.</p>
+            </div>
+        </main>
+
+        <footer>
+            <a href="#" id="settings-link">Settings</a>
+            <span class="version">v1.0.0</span>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
