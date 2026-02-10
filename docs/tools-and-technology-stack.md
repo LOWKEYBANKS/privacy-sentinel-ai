@@ -46,6 +46,7 @@
 
 ### **Document Processing**
 - [Trafilatura](https://trafilatura.readthedocs.io/) - Text and metadata extraction from HTML/web pages
+- [Beautifulsoup](https://github.com/tec-cloud/beautifulsoup/) - Text and metadata extraction from HTML/web pages
 - [Apache Tika](https://tika.apache.org/) - Universal document parser (PDF, DOCX, etc.)
 - [Unstructured.io](https://unstructured.io/) - Advanced document parsing and ML chunking
 - [LexNLP](https://lexnlp.org/) - Leading open-source legal text extraction
