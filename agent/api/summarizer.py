@@ -1,6 +1,7 @@
 """
 Privacy Sentinel AI - Core API
-Production-ready privacy policy analysis with LLM integration
+Production-ready privacy policy analysis with specialized legal intelligence,
+granular risk scoring, and multi-language support.
 """
 
 import hashlib
@@ -16,6 +17,13 @@ from pydantic import BaseModel, field_validator
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from openai import OpenAI
+from langdetect import detect, DetectorFactory
+
+# Ensure consistent language detection results
+DetectorFactory.seed = 0
+
+# Import specialized legal knowledge
+from knowledge.legal_frameworks import LEGAL_FRAMEWORKS
 
 # Configure secure logging
 logging.basicConfig(
@@ -38,19 +46,18 @@ class SecurityConfig:
 llm_mode = os.getenv("LLM_MODE", "development")
 client = None
 if llm_mode == "production":
-    # Uses environment variables OPENAI_API_KEY and OPENAI_BASE_URL if provided
     client = OpenAI()
 
 app = FastAPI(
     title="Privacy Sentinel AI", 
-    version="1.1.0",
-    description="AI-powered privacy policy analysis"
+    version="1.3.0",
+    description="AI-powered privacy policy analysis with specialized legal intelligence and multi-language support"
 )
 
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to specific domains
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -84,45 +91,71 @@ class PrivacyAnalysisRequest(BaseModel):
             raise ValueError(f"Text too long (max {SecurityConfig.MAX_TEXT_LENGTH} chars)")
         return v
 
+class RiskBreakdown(BaseModel):
+    data_collection: int
+    third_party_sharing: int
+    user_rights: int
+    data_retention: int
+
 class PrivacyAnalysisResponse(BaseModel):
     summary: str
     risk_score: int
+    risk_breakdown: RiskBreakdown
     risks: List[str]
+    legal_violations: List[str]
+    detected_language: str
     recommended_action: str
     hash_id: str
     analysis_timestamp: str
     processing_time_ms: float
 
 # AI Analysis Logic
-async def perform_ai_analysis(text: str) -> dict:
-    """Perform analysis using LLM or fallback to keyword matching"""
+async def perform_specialized_analysis(text: str, language: str) -> dict:
+    """Perform specialized legal analysis using LLM and the Knowledge Base."""
     if llm_mode == "production" and client:
         try:
+            knowledge_context = json.dumps(LEGAL_FRAMEWORKS, indent=2)
+            
             prompt = f"""
-            Analyze the following privacy policy snippet and provide a JSON response with:
-            1. 'summary': A 2-sentence professional summary of privacy implications.
-            2. 'risk_score': An integer from 0-100 (higher is riskier).
-            3. 'risks': A list of specific risk categories found (e.g., 'location_tracking', 'data_sharing').
-            4. 'recommended_action': A short advice for the user.
+            You are a specialized Privacy Legal Expert. Analyze the following privacy policy snippet (Language: {language}).
+            
+            Use this Legal Knowledge Base for reference:
+            {knowledge_context}
+            
+            Provide a JSON response with:
+            1. 'summary': A professional 2-sentence summary of privacy implications.
+            2. 'risk_score': An overall integer from 0-100.
+            3. 'risk_breakdown': {{'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}}
+            4. 'risks': A list of specific risk categories.
+            5. 'legal_violations': A list of potential violations against GDPR, CCPA, or HIPAA.
+            6. 'recommended_action': Clear, actionable advice for the user.
 
             Snippet: {text[:4000]}
             """
             response = client.chat.completions.create(
                 model="gpt-4.1-mini",
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "system", "content": "You are a Privacy Sentinel AI specialized in global data regulations."},
+                          {"role": "user", "content": prompt}],
                 response_format={"type": "json_object"}
             )
             return json.loads(response.choices[0].message.content)
         except Exception as e:
-            logger.error(f"LLM Analysis failed, falling back to keywords: {e}")
+            logger.error(f"Specialized LLM Analysis failed: {e}")
     
     # Fallback / Development Mode
     risks = detect_privacy_risks_fallback(text)
     score = calculate_risk_score_fallback(risks)
     return {
-        "summary": "Development mode analysis based on keyword detection.",
+        "summary": "Development mode analysis. Specialized legal intelligence is inactive.",
         "risk_score": score,
+        "risk_breakdown": {
+            "data_collection": score,
+            "third_party_sharing": score // 2,
+            "user_rights": 50,
+            "data_retention": 30
+        },
         "risks": risks,
+        "legal_violations": ["Specialized analysis requires production mode"],
         "recommended_action": "Review manually as this is a development-level assessment."
     }
 
@@ -145,7 +178,13 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
     content_hash = hashlib.sha256(request.snippet.encode('utf-8')).hexdigest()[:16]
     
     try:
-        analysis = await perform_ai_analysis(request.snippet)
+        # Detect language
+        try:
+            detected_lang = detect(request.snippet)
+        except:
+            detected_lang = "unknown"
+            
+        analysis = await perform_specialized_analysis(request.snippet, detected_lang)
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
         
         background_tasks.add_task(
@@ -156,7 +195,12 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
         return PrivacyAnalysisResponse(
             summary=analysis['summary'],
             risk_score=analysis['risk_score'],
+            risk_breakdown=analysis.get('risk_breakdown', {
+                "data_collection": 0, "third_party_sharing": 0, "user_rights": 0, "data_retention": 0
+            }),
             risks=analysis['risks'],
+            legal_violations=analysis.get('legal_violations', []),
+            detected_language=detected_lang,
             recommended_action=analysis['recommended_action'],
             hash_id=content_hash,
             analysis_timestamp=datetime.now().isoformat(),
@@ -168,7 +212,7 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "version": "1.1.0", "llm_mode": llm_mode}
+    return {"status": "healthy", "version": "1.3.0", "llm_mode": llm_mode}
 
 async def log_analysis_result(content_hash: str, risk_score: int, risk_count: int, client_ip: str):
     try:
