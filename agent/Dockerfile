@@ -1,4 +1,3 @@
-```dockerfile
 # Privacy Sentinel AI API Container
 FROM python:3.11-slim
 
@@ -17,7 +16,8 @@ RUN apt-get update && apt-get install -y \
 RUN useradd --create-home --shell /bin/bash appuser
 
 # Copy requirements first (for Docker layer caching)
-COPY ../requirements.txt .
+# Note: requirements.txt should be in the build context
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
