@@ -30,7 +30,9 @@ prometheus-client>=0.19.0
 python-dotenv>=1.0.0
 
 # Web Scraping & HTTP Clients
-beautifulsoup4>=4.12.0
+
+# lexnlp==2.3.0 requires beautifulsoup4==4.11.1
+beautifulsoup4==4.11.1
 aiohttp>=3.9.0
 # requests 2.28.1 is required by lexnlp 2.3.0
 requests==2.28.1
