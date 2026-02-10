@@ -1,1 +1,105 @@
-{"name": "Policy Monitoring Workflow", "nodes": [], "connections": {}}
+{
+  "name": "Privacy Sentinel - Policy Change Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "interval": 24
+            }
+          ]
+        }
+      },
+      "name": "Daily Check Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT source_url, content_hash FROM analysis_audit_log GROUP BY source_url, content_hash"
+      },
+      "name": "Get Monitored URLs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Get Monitored URLs\"].json[\"source_url\"]}}",
+        "options": {}
+      },
+      "name": "Fetch Current Policy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require(\'crypto\');\nconst newHash = crypto.createHash(\'sha256\').update(items[0].json.data).digest(\'hex\').substring(0, 16);\nreturn [{ json: { ...items[0].json, new_hash: newHash } }];"
+      },
+      "name": "Calculate New Hash",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Calculate New Hash\"].json[\"new_hash\"]}}",
+              "value2": "={{$node[\"Get Monitored URLs\"].json[\"content_hash\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "Has Policy Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://fastapi:8000/api/summarize",
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "source_url",
+              "value": "={{$node[\"Get Monitored URLs\"].json[\"source_url\"]}}"
+            },
+            {
+              "name": "snippet",
+              "value": "={{$node[\"Fetch Current Policy\"].json[\"data\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "Trigger Re-Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 400]
+    }
+  ],
+  "connections": {
+    "Daily Check Trigger": {
+      "main": [[{ "node": "Get Monitored URLs", "type": "main", "index": 0 }]]
+    },
+    "Get Monitored URLs": {
+      "main": [[{ "node": "Fetch Current Policy", "type": "main", "index": 0 }]]
+    },
+    "Fetch Current Policy": {
+      "main": [[{ "node": "Calculate New Hash", "type": "main", "index": 0 }]]
+    },
+    "Calculate New Hash": {
+      "main": [[{ "node": "Has Policy Changed?", "type": "main", "index": 0 }]]
+    },
+    "Has Policy Changed?": {
+      "main": [null, [{ "node": "Trigger Re-Analysis", "type": "main", "index": 0 }]]
+    }
+  }
+}
