@@ -1,5 +1,3 @@
-
-```python
 """
 Privacy Sentinel AI - Phase 0 Core API
 Security-first privacy policy analysis endpoint
@@ -12,7 +10,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
@@ -30,25 +28,10 @@ logger = logging.getLogger(__name__)
 
 # Security configuration
 class SecurityConfig:
-    
-                    
-                        ƒ
-                        MAX TEXT LENGTH
-                    
-                 = 16000
-    
-                    
-                        ƒ
-                        RATE LIMIT
-                    
-                 = 100  # requests per minute
-    
-                    
-                        ƒ
-                        REQUIRE ENCRYPTION
-                    
-                 = True
-    
+    MAX_TEXT_LENGTH = 16000
+    RATE_LIMIT = 100  # requests per minute
+    REQUIRE_ENCRYPTION = True
+
 app = FastAPI(
     title="Privacy Sentinel AI", 
     version="1.0.0",
@@ -68,30 +51,10 @@ app.add_middleware(
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            host=os.getenv("
-                    
-                        ƒ
-                        DB HOST
-                    
-                ", "localhost"),
-            database=os.getenv("
-                    
-                        ƒ
-                        DB NAME
-                    
-                ", "privacy_sentinel"),
-            user=os.getenv("
-                    
-                        ƒ
-                        DB USER
-                    
-                ", "dev"),
-            password=os.getenv("
-                    
-                        ƒ
-                        DB PASSWORD
-                    
-                ", "dev"),
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "privacy_sentinel"),
+            user=os.getenv("DB_USER", "dev"),
+            password=os.getenv("DB_PASSWORD", "dev"),
             cursor_factory=RealDictCursor
         )
         return conn
@@ -105,15 +68,11 @@ class PrivacyAnalysisRequest(BaseModel):
     snippet: str
     timestamp: Optional[str] = None
     
-    @validator('snippet')
+    @field_validator('snippet')
+    @classmethod
     def validate_snippet(cls, v):
         if len(v) > SecurityConfig.MAX_TEXT_LENGTH:
-            raise ValueError(f"Text too long (max {SecurityConfig.
-                    
-                        ƒ
-                        MAX TEXT LENGTH
-                    
-                } chars)")
+            raise ValueError(f"Text too long (max {SecurityConfig.MAX_TEXT_LENGTH} chars)")
         
         # Check for potential PII patterns
         pii_patterns = ['@', 'phone:', 'ssn:', 'address:', 'credit card:']
@@ -265,24 +224,9 @@ async def health_check():
 async def security_status():
     """Security configuration endpoint"""
     return {
-        "max_text_length": SecurityConfig.
-                    
-                        ƒ
-                        MAX TEXT LENGTH
-                    
-                ,
-        "encryption_required": SecurityConfig.
-                    
-                        ƒ
-                        REQUIRE ENCRYPTION
-                    
-                ,
-        "rate_limit": SecurityConfig.
-                    
-                        ƒ
-                        RATE LIMIT
-                    
-                ,
+        "max_text_length": SecurityConfig.MAX_TEXT_LENGTH,
+        "encryption_required": SecurityConfig.REQUIRE_ENCRYPTION,
+        "rate_limit": SecurityConfig.RATE_LIMIT,
         "logging_enabled": True,
         "pii_detection": True,
         "audit_logging": True
@@ -353,14 +297,7 @@ async def startup_event():
                 risk_score INTEGER NOT NULL,
                 risk_count INTEGER NOT NULL,
                 client_ip VARCHAR(45),
-                timestamp TIMESTAMP DEFAULT 
-                    
-                        ƒ
-                        CURRENT TIMESTAMP
-                    
-                ,
-                INDEX idx_content_hash (content_hash),
-                INDEX idx_timestamp (timestamp)
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
