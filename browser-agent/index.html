@@ -1,13 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Privacy Sentinel AI</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
 </head>
-<body style="width:300px; padding:15px; font-family:sans-serif;">
-    <h3>🛡️ Privacy Sentinel</h3>
-    <p>Status: <span style="color:green;">Python Agent Active</span></p>
+<body>
+    <div class="header">
+        <h1>🛡️ Privacy Sentinel</h1>
+    </div>
+    <div id="app-content">
+        <div class="score-container">
+            <div id="score" class="score-value">--</div>
+            <div id="risk-level">Scanning...</div>
+        </div>
+        <div id="summary" class="summary">
+            Please wait while we analyze the page's privacy policy.
+        </div>
+    </div>
+    <div class="footer">
+        Powered by Privacy Sentinel AI
+    </div>
     <script type="py" src="./agent.py"></script>
 </body>
 </html>

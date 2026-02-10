@@ -62,6 +62,34 @@ services:
       timeout: 5s
       retries: 5
 
+  # Ollama for Local LLM
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - privacy-net
+    restart: unless-stopped
+
+  # n8n for Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n_workflows:/home/node/workflows
+    networks:
+      - privacy-net
+    restart: unless-stopped
+
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -100,6 +128,10 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+  n8n_data:
     driver: local
 
 networks:

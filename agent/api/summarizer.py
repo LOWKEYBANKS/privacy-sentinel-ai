@@ -44,9 +44,14 @@ class SecurityConfig:
 
 # LLM Client Setup
 llm_mode = os.getenv("LLM_MODE", "development")
+ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434/v1")
 client = None
+
 if llm_mode == "production":
     client = OpenAI()
+elif llm_mode == "local":
+    # Use OpenAI client pointed to Ollama's local API
+    client = OpenAI(base_url=ollama_base_url, api_key="ollama")
 
 app = FastAPI(
     title="Privacy Sentinel AI", 
@@ -142,7 +147,26 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
         except Exception as e:
             logger.error(f"Specialized LLM Analysis failed: {e}")
     
-    # Fallback / Development Mode
+    # Local / Fallback Mode
+    if llm_mode == "local" and client:
+        try:
+            knowledge_context = json.dumps(LEGAL_FRAMEWORKS, indent=2)
+            prompt = f"""
+            You are a specialized Privacy Legal Expert. Analyze the following privacy policy snippet.
+            Use this Legal Knowledge Base for reference: {knowledge_context}
+            Provide a JSON response with summary, risk_score, risk_breakdown, risks, legal_violations, and recommended_action.
+            Snippet: {text[:4000]}
+            """
+            response = client.chat.completions.create(
+                model=os.getenv("OLLAMA_MODEL", "mistral"),
+                messages=[{"role": "system", "content": "You are a Privacy Sentinel AI."},
+                          {"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
+        except Exception as e:
+            logger.error(f"Local Ollama Analysis failed: {e}")
+
     risks = detect_privacy_risks_fallback(text)
     score = calculate_risk_score_fallback(risks)
     return {

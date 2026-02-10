@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  fastapi:
+    image: ${DOCKERHUB_USERNAME}/privacy-sentinel-agent:latest
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - LLM_MODE=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - privacy-net
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - privacy-net
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - privacy-net
+
+volumes:
+  postgres_data:
+
+networks:
+  privacy-net:
+    driver: bridge

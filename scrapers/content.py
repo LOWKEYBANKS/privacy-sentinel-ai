@@ -7,6 +7,7 @@ Integrates with web scraping and analysis backend
 import re
 import json
 import requests
+import trafilatura
 from datetime import datetime
 from typing import Dict, List, Optional
 from urllib.parse import urljoin, urlparse
@@ -69,31 +70,31 @@ class PrivacyPolicyDetector:
         }
 
     def extract_content_from_url(self, url: str) -> Dict[str, any]:
-        """Extract and analyze content from a URL"""
+        """Extract and analyze content from a URL using Trafilatura and BeautifulSoup"""
         try:
             headers = {
                 'User-Agent': 'Privacy Sentinel AI 1.0 (privacy-protection@sentinel.ai)'
             }
             
+            # Use trafilatura for high-quality text extraction
+            downloaded = trafilatura.fetch_url(url)
+            trafilatura_text = trafilatura.extract(downloaded) if downloaded else None
+            
             response = requests.get(url, headers=headers, timeout=30)
             response.raise_for_status()
-            
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Clean up script and style elements
-            for script in soup(["script", "style", "nav", "footer"]):
-                script.decompose()
-            
-            # Extract relevant sections
+            # Extract relevant sections using existing logic
             privacy_sections = self._extract_privacy_sections(soup)
             
             return {
                 'url': url,
                 'title': self._extract_title(soup),
                 'privacy_policies': privacy_sections,
-                'full_text': self._clean_text(soup.get_text())[:10000],
+                'full_text': (trafilatura_text or self._clean_text(soup.get_text()))[:16000],
                 'detected_elements': self._detect_policy_elements(soup),
-                'extraction_time': datetime.now().isoformat()
+                'extraction_time': datetime.now().isoformat(),
+                'method': 'trafilatura+bs4'
             }
             
         except Exception as e:
