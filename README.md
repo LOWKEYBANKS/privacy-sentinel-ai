@@ -86,10 +86,14 @@ Installation
 git clone https://github.com/LOWKEYBANKS/privacy-sentinel-ai.git
 cd privacy-sentinel-ai
 docker-compose up --build
-```
+# Configure environment variables
+cp .env.example .env
 
+```
 # Deploy the platform
 docker-compose up -d
+# Optional: include nginx reverse proxy
+# docker-compose --profile web up -d
 
 # Access
 # Web UI: http://localhost
