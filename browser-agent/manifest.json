@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Privacy Sentinel AI (Python)",
+  "version": "0.1.0",
+  "description": "Real-time privacy policy analysis powered by Python and PyScript",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://*/*"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Privacy Sentinel AI"
+  }
+}
