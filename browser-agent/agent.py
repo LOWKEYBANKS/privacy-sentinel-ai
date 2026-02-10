@@ -4,25 +4,41 @@ import asyncio
 import json
 
 class BrowserPrivacyAgent:
-    def __init__(self, api_base_url="http://localhost:8000"):
-        self.api_url = api_base_url
-        self.detection_keywords = ["privacy", "policy", "terms", "data protection", "legal"]
+    def __init__(self):
+        # Dynamically determine API URL: use production if not on localhost
+        self.api_url = "https://api.privacysentinel.ai" if "localhost" not in js.window.location.hostname else "http://localhost:8000"
+        self.detection_keywords = ["privacy", "policy", "terms", "data protection", "legal", "compliance", "gdpr"]
         
     async def scan_current_page(self):
         js.console.log("Privacy Sentinel: Scanning page...")
+        
+        # Update UI to show scanning state
+        self.update_ui_status("Scanning...", "--")
+        
         links = js.document.querySelectorAll("a")
         found_policies = []
         for i in range(links.length):
             link = links.item(i)
             text = link.innerText.lower()
             href = link.getAttribute("href")
-            if any(keyword in text for keyword in self.detection_keywords):
+            if href and any(keyword in text for keyword in self.detection_keywords):
                 found_policies.append({"text": text, "url": href})
+        
         if found_policies:
-            js.console.log(f"Privacy Sentinel: Found {len(found_policies)} potential policies")
-            await self.analyze_policy(found_policies[0]['url'])
+            policy_url = found_policies[0]['url']
+            if not policy_url.startswith('http'):
+                policy_url = js.window.location.origin + policy_url
+            js.console.log(f"Privacy Sentinel: Analyzing {policy_url}")
+            await self.analyze_policy(policy_url)
         else:
-            js.console.log("Privacy Sentinel: No policies detected on this page")
+            self.update_ui_status("No Policy Found", "N/A")
+            js.console.log("Privacy Sentinel: No policies detected")
+
+    def update_ui_status(self, status, score):
+        score_el = js.document.getElementById("score")
+        status_el = js.document.getElementById("risk-level")
+        if score_el: score_el.innerText = score
+        if status_el: status_el.innerText = status
 
     async def analyze_policy(self, url):
         try:
