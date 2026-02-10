@@ -18,8 +18,8 @@ RUN useradd --create-home --shell /bin/bash appuser
 # Copy requirements first (for Docker layer caching)
 # Note: requirements.txt should be in the build context
 COPY requirements.txt .
-# Pin numpy and install build tools to avoid gensim build error
-RUN pip install --no-cache-dir "numpy<2.0.0" "setuptools<70.0.0" "Cython<3.0.0" && \
+# Install build tools and pin dependencies to resolve gensim/lexnlp build issues
+RUN pip install --no-cache-dir "setuptools<70.0.0" "wheel" "Cython<3.0.0" "numpy<2.0.0" && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
