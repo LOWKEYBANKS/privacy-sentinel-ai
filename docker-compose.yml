@@ -14,13 +14,19 @@ services:
       - redis
     environment:
       - DATABASE_URL=postgresql://dev:dev@postgres:5432/privacy_sentinel
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-dev}:${POSTGRES_PASSWORD:-dev}@postgres:5432/${POSTGRES_DB:-privacy_sentinel}
       - DB_HOST=postgres
       - DB_NAME=privacy_sentinel
       - DB_USER=dev
       - DB_PASSWORD=dev
+      - DB_NAME=${POSTGRES_DB:-privacy_sentinel}
+      - DB_USER=${POSTGRES_USER:-dev}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-dev}
       - REDIS_URL=redis://redis:6379
       - LLM_MODE=development
       - LOG_LEVEL=info
+      - LLM_MODE=${LLM_MODE:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - ./agent:/app
       - ./logs:/app/logs
@@ -38,6 +44,11 @@ services:
       POOL_BASE_URL: jdbc:postgresql://postgres:5432/privacy_sentinel
     ports:
       - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-privacy_sentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev}
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -46,6 +57,7 @@ services:
       - privacy-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dev -d privacy_sentinel"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-dev} -d $${POSTGRES_DB:-privacy_sentinel}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -55,6 +67,8 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -69,6 +83,8 @@ services:
   # Nginx Reverse Proxy (Optional)
   nginx:
     image: nginx:alpine
+    profiles:
+      - web
     ports:
       - "80:80"
     volumes:
