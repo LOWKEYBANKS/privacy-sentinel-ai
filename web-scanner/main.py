@@ -13,8 +13,9 @@ import sys
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from browser_extension.detector import WebPrivacyScanner
-from browser_extension.content import PrivacyPolicyDetector
+# Corrected imports after directory reorganization
+from scrapers.detector import WebPrivacyScanner
+from scrapers.content import PrivacyPolicyDetector
 
 async def scan_single_url(url: str, output_format: str = 'json'):
     """Scan single URL for privacy policies"""
