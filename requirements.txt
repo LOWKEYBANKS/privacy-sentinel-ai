@@ -14,8 +14,8 @@ python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 
 # Legal Text Processing
-# LexNLP has strict version requirements for 'requests'
-lexnlp
+# LexNLP 2.3.0 is more compatible with modern Python
+lexnlp==2.3.0
 trafilatura>=1.6.0
 
 # Development & Testing
@@ -32,8 +32,8 @@ python-dotenv>=1.0.0
 # Web Scraping & HTTP Clients
 beautifulsoup4>=4.12.0
 aiohttp>=3.9.0
-# requests is managed by lexnlp to avoid conflicts
-requests
+# requests 2.28.1 is required by lexnlp 2.3.0
+requests==2.28.1
 
 # AI & LLM Integration
 openai>=1.3.0
