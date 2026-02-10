@@ -18,7 +18,9 @@ RUN useradd --create-home --shell /bin/bash appuser
 # Copy requirements first (for Docker layer caching)
 # Note: requirements.txt should be in the build context
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Pin numpy to avoid gensim build error (AttributeError: 'dict' object has no attribute '__NUMPY_SETUP__')
+RUN pip install --no-cache-dir "numpy<2.0.0" && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
