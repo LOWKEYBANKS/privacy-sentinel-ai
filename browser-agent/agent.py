@@ -13,7 +13,7 @@ class BrowserPrivacyAgent:
         js.console.log("Privacy Sentinel: Scanning page...")
         
         # Update UI to show scanning state
-        self.update_ui_status("Scanning...", "--")
+        self.update_ui_status("Scanning...", "--", "Searching for privacy policy links...")
         
         links = js.document.querySelectorAll("a")
         found_policies = []
@@ -31,20 +31,23 @@ class BrowserPrivacyAgent:
             js.console.log(f"Privacy Sentinel: Analyzing {policy_url}")
             await self.analyze_policy(policy_url)
         else:
-            self.update_ui_status("No Policy Found", "N/A")
+            self.update_ui_status("No Policy Found", "N/A", "No privacy policy links detected on this page.")
             js.console.log("Privacy Sentinel: No policies detected")
 
-    def update_ui_status(self, status, score):
+    def update_ui_status(self, status, score, summary=None):
         score_el = js.document.getElementById("score")
         status_el = js.document.getElementById("risk-level")
+        summary_el = js.document.getElementById("summary")
+        
         if score_el: score_el.innerText = score
         if status_el: status_el.innerText = status
+        if summary_el and summary: summary_el.innerText = summary
 
     async def analyze_policy(self, url):
         try:
             payload = {
                 "source_url": url,
-                "snippet": f"Policy found at {url}. (Content extraction in progress via Python WASM)",
+                "snippet": f"Policy found at {url}. Analyzing for privacy risks...",
                 "timestamp": js.Date.new().toISOString()
             }
             response = await pyfetch(
@@ -55,8 +58,20 @@ class BrowserPrivacyAgent:
             )
             if response.status == 200:
                 data = await response.json()
+                risk_score = data.get('risk_score', 0)
+                summary = data.get('summary', 'Analysis complete.')
+                
+                # Update UI
+                self.update_ui_status(
+                    status="High Risk" if risk_score >= 70 else "Medium Risk" if risk_score >= 40 else "Low Risk",
+                    score=str(risk_score),
+                    summary=summary
+                )
                 self.show_alert(data)
+            else:
+                self.update_ui_status("Error", "!", "Failed to connect to analysis server.")
         except Exception as e:
+            self.update_ui_status("Error", "!", f"Connection failed: {str(e)}")
             js.console.error(f"Privacy Sentinel: Analysis failed: {str(e)}")
 
     def show_alert(self, analysis):
