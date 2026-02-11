@@ -251,6 +251,9 @@ async def log_analysis_result(content_hash: str, risk_score: int, risk_count: in
         conn.close()
     except Exception as e:
         logger.error(f"Audit log failed: {e}")
+        # In mock/dev mode, don't fail the whole request if DB is down
+        if os.getenv("LLM_MODE") == "mock":
+            logger.warning("Continuing without audit log in mock mode")
 
 if __name__ == "__main__":
     import uvicorn
