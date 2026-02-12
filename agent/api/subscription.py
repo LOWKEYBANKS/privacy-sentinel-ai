@@ -13,8 +13,17 @@ STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID", "price_1_month_1usd")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_mock")
 
 # In-memory storage for demo purposes (In production, use PostgreSQL)
+from datetime import datetime, timedelta
+
 mock_user_db = {
-    "user123": {"is_subscribed": False, "level": "free", "stripe_customer_id": None}
+    "user123": {
+        "is_subscribed": False, 
+        "level": "free", 
+        "stripe_customer_id": None,
+        "trial_ends_at": datetime.now() + timedelta(days=7),
+        "daily_scans": 0,
+        "last_scan_date": datetime.now().date()
+    }
 }
 
 async def get_current_user():
@@ -24,11 +33,19 @@ async def get_current_user():
 @router.get("/subscription/status")
 async def get_subscription_status(user_id: str = Depends(get_current_user)):
     """Check the current user's subscription status."""
-    user_data = mock_user_db.get(user_id, {"is_subscribed": False, "level": "free"})
+    user_data = mock_user_db.get(user_id)
+    if not user_data:
+        return {"is_subscribed": False, "level": "free"}
+    
+    in_trial = datetime.now() < user_data.get("trial_ends_at", datetime.now())
+    
     return {
         "user_id": user_id,
         "is_subscribed": user_data["is_subscribed"],
-        "subscription_level": user_data["level"]
+        "subscription_level": "pro" if user_data["is_subscribed"] else "free",
+        "in_trial": in_trial,
+        "trial_days_left": (user_data["trial_ends_at"] - datetime.now()).days if in_trial else 0,
+        "can_use_background": user_data["is_subscribed"] or in_trial
     }
 
 @router.post("/subscription/checkout")
