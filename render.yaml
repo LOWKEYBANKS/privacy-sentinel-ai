@@ -13,7 +13,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: privacy-sentinel-redis
           property: connectionString
       - key: LLM_MODE
@@ -21,13 +21,15 @@ services:
       - key: OPENAI_API_KEY
         sync: false
 
+  - type: keyvalue
+    name: privacy-sentinel-redis
+    region: oregon
+    plan: free
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+
 databases:
   - name: privacy-sentinel-db
     plan: free
     region: oregon
-
-redis:
-  - name: privacy-sentinel-redis
-    plan: free
-    region: oregon
-    ipAllowList: []
