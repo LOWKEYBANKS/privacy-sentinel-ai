@@ -3,6 +3,9 @@
 ## v1.0.0 - 2026-02-12
 
 ### Added
+- **Mobile Money Integration:** Implemented a flexible payment gateway supporting M-Pesa and other mobile wallets via Flutterwave for $1/month subscriptions.
+- **Proactive "Interception" Flow:** Enhanced browser extension and mobile background service to proactively detect and analyze policies before user acceptance.
+- **Python-Native Mobile Strategy:** Developed a 100% Python mobile app core using Kivy and python-for-android for background monitoring.
 - **Real AI Model Integration:** Implemented OpenAI GPT-4o-mini for production analysis with a dual-mode system (production/development).
 - **Specialized Legal Knowledge Base:** Integrated GDPR, CCPA, and HIPAA compliance detection with multi-language support.
 - **Alembic Database Migrations:** Set up Alembic for robust PostgreSQL schema management.
@@ -22,3 +25,4 @@
 
 ### Removed
 - Problematic `lexnlp` dependency from `requirements.txt`.
+- Native Kotlin/Android code to maintain a **100% Pure Python Ecosystem**.
