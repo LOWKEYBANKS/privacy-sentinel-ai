@@ -14,9 +14,22 @@ def start_monitoring():
     
     last_url = ""
     while True:
-        # 1. Detect active browser URL (Mock logic for blueprint)
-        # 2. Check against Privacy Sentinel API
-        # 3. Trigger notification if risk is high
+        # 1. Detect active browser URL and page content
+        # In Kivy/python-for-android, we use PyJNIus to get the AccessibilityNodeInfo
+        # root_node = AccessibilityService.rootInActiveWindow
+        
+        # PROACTIVE: Search for policy links in the current view
+        # policy_link = find_policy_link_in_nodes(root_node)
+        
+        # 2. If a policy link is found, prioritize scanning that URL
+        # target_to_scan = policy_link if policy_link else current_browser_url
+        
+        # 3. Check against Privacy Sentinel AI API
+        # response = requests.post(API_URL, json={"source_url": target_to_scan})
+        
+        # 4. Trigger "Pop Icon" overlay if risk is high
+        # if response.json().get('risk_score') > 40:
+        #     show_overlay(response.json())
         
         time.sleep(5) # Check every 5 seconds
 

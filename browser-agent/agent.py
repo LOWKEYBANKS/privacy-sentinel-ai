@@ -32,6 +32,33 @@ async def get_active_tab_content():
         print(f"Content extraction error: {e}")
         return js.document.body.innerText if js.document.body else ""
 
+async def find_policy_links():
+    """Finds links to privacy or cookie policies on the current page."""
+    try:
+        if hasattr(js, "chrome") and hasattr(js.chrome, "tabs"):
+            tabs = await js.chrome.tabs.query({"active": True, "currentWindow": True})
+            active_tab = tabs[0]
+            
+            # Find links containing "policy", "privacy", or "cookie"
+            result = await js.chrome.scripting.executeScript({
+                "target": {"tabId": active_tab.id},
+                "func": js.eval("""
+                    () => {
+                        const links = Array.from(document.querySelectorAll('a'));
+                        const policyLinks = links.filter(a => 
+                            /privacy|cookie|policy/i.test(a.innerText) || 
+                            /privacy|cookie|policy/i.test(a.href)
+                        ).map(a => a.href);
+                        return policyLinks;
+                    }
+                """)
+            })
+            return result[0].result
+        return []
+    except Exception as e:
+        print(f"Link detection error: {e}")
+        return []
+
 async def analyze_current_page(event=None):
     """Triggers the analysis of the current page's privacy policy."""
     score_element = document.getElementById("score")
@@ -41,7 +68,15 @@ async def analyze_current_page(event=None):
     # Update UI to loading state
     score_element.innerText = "..."
     status_element.innerText = "Auto-Scanning..."
-    summary_element.innerText = "Desktop Sentinel is analyzing policies in the background..."
+    summary_element.innerText = "Desktop Sentinel is detecting policy links..."
+    
+    # PROACTIVE: Find policy links first
+    policy_links = await find_policy_links()
+    target_url = js.window.location.href
+    
+    if policy_links:
+        target_url = policy_links[0]
+        summary_element.innerText = f"Proactively analyzing: {target_url}"
     
     content = await get_active_tab_content()
     
@@ -59,7 +94,7 @@ async def analyze_current_page(event=None):
             },
             body=js.JSON.stringify({
                 "snippet": content[:10000], # Send a larger chunk for better AI context
-                "source_url": js.window.location.href
+                "source_url": target_url
             })
         )
         
