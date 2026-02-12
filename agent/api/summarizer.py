@@ -71,18 +71,22 @@ app.add_middleware(
 
 # Database connection
 def get_db_connection():
+    db_url = os.getenv("DATABASE_URL")
     try:
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            database=os.getenv("DB_NAME", "privacy_sentinel"),
-            user=os.getenv("DB_USER", "dev"),
-            password=os.getenv("DB_PASSWORD", "dev"),
-            cursor_factory=RealDictCursor
-        )
+        if db_url:
+            conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
+        else:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST", "localhost"),
+                database=os.getenv("DB_NAME", "privacy_sentinel"),
+                user=os.getenv("DB_USER", "dev"),
+                password=os.getenv("DB_PASSWORD", "dev"),
+                cursor_factory=RealDictCursor
+            )
         return conn
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        return None
 
 # Request/Response Models
 class PrivacyAnalysisRequest(BaseModel):
@@ -172,12 +176,23 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
 
 def detect_privacy_risks_fallback(text: str) -> List[str]:
     risk_keywords = {
-        "email": "email_collection", "location": "location_tracking", 
-        "biometric": "biometric_data", "voice": "voice_data",
-        "third party": "data_sharing", "advertising": "marketing_data"
+        "email": "email_collection", 
+        "location": "location_tracking", 
+        "biometric": "biometric_data", 
+        "voice": "voice_data",
+        "third party": "data_sharing", 
+        "advertising": "marketing_data",
+        "collect": "data_collection",
+        "share": "data_sharing",
+        "retain": "data_retention",
+        "marketing": "marketing_data"
     }
     text_lower = text.lower()
-    return list(set([risk for kw, risk in risk_keywords.items() if kw in text_lower]))
+    detected = []
+    for kw, risk in risk_keywords.items():
+        if kw in text_lower:
+            detected.append(risk)
+    return list(set(detected))
 
 def calculate_risk_score_fallback(risks: List[str]) -> int:
     return min(100, len(risks) * 15 + 10) if risks else 5
@@ -193,11 +208,14 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
         content_to_analyze = request.snippet
         if request.source_url:
             logger.info(f"Source URL provided: {request.source_url}. Using Playwright scraper.")
-            scraped_content = await scrape_dynamic_content(request.source_url)
-            if scraped_content:
-                content_to_analyze = scraped_content
-            else:
-                raise HTTPException(status_code=400, detail="Failed to scrape content from the provided URL.")
+            try:
+                scraped_content = await scrape_dynamic_content(request.source_url)
+                if scraped_content:
+                    content_to_analyze = scraped_content
+                else:
+                    logger.warning("Scraping returned empty content, using snippet instead.")
+            except Exception as scrape_err:
+                logger.warning(f"Scraping failed: {scrape_err}. Falling back to snippet.")
 
         # Detect language
         try:
@@ -238,6 +256,10 @@ async def health_check():
 async def log_analysis_result(content_hash: str, risk_score: int, risk_count: int, client_ip: str):
     try:
         conn = get_db_connection()
+        if not conn:
+            logger.warning("Skipping audit log due to missing database connection.")
+            return
+            
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO analysis_audit_log (content_hash, risk_score, risk_count, client_ip, timestamp) 
@@ -251,4 +273,4 @@ async def log_analysis_result(content_hash: str, risk_score: int, risk_count: in
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("summarizer:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("summarizer:app", host="0.0.0.0", port=10000)

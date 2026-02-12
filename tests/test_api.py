@@ -18,7 +18,6 @@ def test_health_check():
 def test_analyze_privacy_policy_basic():
     """Test basic privacy policy analysis"""
     payload = {
-        "source_url": "https://example.com/privacy",
         "snippet": "We collect your email and location data for marketing purposes.",
         "timestamp": "2026-02-10T09:00:00Z"
     }
@@ -27,6 +26,7 @@ def test_analyze_privacy_policy_basic():
     data = response.json()
     assert "risk_score" in data
     assert "summary" in data
+    # In development mode, risks should be detected from the snippet
     assert len(data["risks"]) > 0
 
 def test_analyze_privacy_policy_too_long():

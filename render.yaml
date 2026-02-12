@@ -4,7 +4,10 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt && pip install -r agent/requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt
+      pip install -r agent/requirements.txt
+      playwright install chromium
     startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker agent.api.summarizer:app --bind 0.0.0.0:10000
     envVars:
       - key: DATABASE_URL
@@ -21,7 +24,9 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: PYTHONPATH
-        value: /opt/render/project/src/agent:/opt/render/project/src
+        value: /opt/render/project/src:/opt/render/project/src/agent
+      - key: PORT
+        value: 10000
 
   - type: keyvalue
     name: privacy-sentinel-redis
