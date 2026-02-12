@@ -71,7 +71,7 @@ app.add_middleware(
 # Database connection
 def get_db_connection():
     try:
-        conn = psycopg2.connect(
+        conn = psycopg2.connect(os.getenv("DATABASE_URL"), 
             host=os.getenv("DB_HOST", "localhost"),
             database=os.getenv("DB_NAME", "privacy_sentinel"),
             user=os.getenv("DB_USER", "dev"),
