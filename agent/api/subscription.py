@@ -1,49 +1,54 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
+import os
 
 router = APIRouter()
 
-# Placeholder for a user model or dependency injection for user authentication
-# In a real application, this would involve JWT, OAuth, or similar.
-async def get_current_user():
-    # This is a mock function. Replace with actual user authentication logic.
-    # For now, we'll assume a user is always authenticated for demonstration.
-    user = {"id": "user123", "is_subscribed": False, "subscription_level": "free"}
-    return user
+# Simple in-memory storage for demo purposes
+# In production, this would be in PostgreSQL
+mock_user_db = {
+    "user123": {"is_subscribed": False, "level": "free"}
+}
 
-async def get_current_active_subscriber(current_user: dict = Depends(get_current_user)):
-    if not current_user.get("is_subscribed"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Subscription required for this feature"
-        )
-    return current_user
+async def get_current_user():
+    # Mock authentication
+    return "user123"
 
 @router.get("/subscription/status")
-async def get_subscription_status(current_user: dict = Depends(get_current_user)):
+async def get_subscription_status(user_id: str = Depends(get_current_user)):
     """Endpoint to check the current user's subscription status."""
+    user_data = mock_user_db.get(user_id, {"is_subscribed": False, "level": "free"})
     return {
-        "user_id": current_user["id"],
-        "is_subscribed": current_user["is_subscribed"],
-        "subscription_level": current_user["subscription_level"]
+        "user_id": user_id,
+        "is_subscribed": user_data["is_subscribed"],
+        "subscription_level": user_data["level"]
     }
 
 @router.post("/subscription/checkout")
-async def create_checkout_session(current_user: dict = Depends(get_current_user)):
-    """Placeholder for initiating a subscription checkout process (e.g., Stripe)."""
-    # In a real scenario, this would interact with a payment gateway like Stripe
-    # to create a checkout session and return a URL.
+async def create_checkout_session(user_id: str = Depends(get_current_user)):
+    """
+    Initiates a subscription checkout process.
+    For the $1/month plan, this would typically use Stripe Checkout.
+    """
     return {
-        "message": "Initiating subscription checkout for user",
-        "user_id": current_user["id"],
-        "checkout_url": "https://example.com/mock-stripe-checkout"
+        "message": "Initiating \$1/month subscription",
+        "checkout_url": "https://checkout.stripe.com/pay/mock_session_123",
+        "cancel_url": "https://privacy-sentinel.ai/cancel",
+        "success_url": "https://privacy-sentinel.ai/success"
     }
+
+@router.post("/subscription/mock-activate")
+async def mock_activate_subscription(user_id: str = Depends(get_current_user)):
+    """
+    Utility endpoint for testing to manually activate a subscription.
+    """
+    mock_user_db[user_id] = {"is_subscribed": True, "level": "pro"}
+    return {"status": "success", "message": "Pro subscription activated for $user_id"}
 
 @router.post("/subscription/webhook")
 async def handle_payment_webhook():
-    """Placeholder for handling payment gateway webhooks (e.g., Stripe, Lemon Squeezy)."""
-    # This endpoint would receive notifications from the payment gateway
-    # upon successful payment, subscription updates, cancellations, etc.
-    # It would then update the user's subscription status in the database.
-    return {"message": "Webhook received and processed"}
-
+    """
+    Handles payment gateway webhooks (Stripe, Lemon Squeezy).
+    """
+    # Logic to parse webhook and update database
+    return {"message": "Webhook processed"}
