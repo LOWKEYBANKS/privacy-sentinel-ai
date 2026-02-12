@@ -24,7 +24,7 @@ jobs:
         pip install -r requirements.txt
         playwright install
         
-        - name: Run tests
+    - name: Run tests
       run: |
         export DATABASE_URL=postgresql://dev:dev@localhost:5432/privacy_sentinel
         # Set PYTHONPATH so tests can find the agent module
