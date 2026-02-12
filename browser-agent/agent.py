@@ -1,49 +1,84 @@
 import js
 from pyodide.http import pyfetch
-from pyscript import document
+from pyscript import document, when
+import asyncio
 
-# Placeholder for Trafilatura integration
-# from trafilatura import extract
+# Core Configuration
+API_URL = "https://privacy-sentinel-api.onrender.com/api/summarize"
 
 def get_page_content():
-    # This function would extract the main content of the page
-    # For now, it's a placeholder
-    return js.document.documentElement.outerHTML
+    """Extracts the text content from the current active tab."""
+    # In a real extension, this would use chrome.scripting.executeScript
+    # For the PyScript demo, we use the current document
+    return js.document.body.innerText if js.document.body else ""
 
-async def analyze_privacy_policy_in_browser():
+async def analyze_current_page(event=None):
+    """Triggers the analysis of the current page's privacy policy."""
+    score_element = document.getElementById("score")
+    status_element = document.getElementById("risk-level")
+    summary_element = document.getElementById("summary")
+    
+    # Update UI to loading state
+    score_element.innerText = "..."
+    status_element.innerText = "Analyzing..."
+    summary_element.innerText = "Fetching policy data and running AI analysis..."
+    
     content = get_page_content()
-    # In the future, we will use Trafilatura here
-    # extracted_text = extract(content)
     
-    # For now, simulate sending to API
-    response = await pyfetch(
-        url="https://privacy-sentinel-api.onrender.com/api/summarize",
-        method="POST",
-        headers={
-            "Content-Type": "application/json"
-        },
-        body=js.JSON.stringify({"snippet": content})
-    )
-    
-    if response.status == 200:
-        data = await response.json()
-        display_risk_score(data.risk_score, data.summary)
-    else:
-        display_error("Failed to analyze privacy policy.")
+    if not content or len(content) < 100:
+        display_error("No significant content found to analyze.")
+        return
 
-def display_risk_score(score, summary):
-    # Create a simple overlay to display the score
-    overlay = document.createElement("div")
-    overlay.style.cssText = "position: fixed; top: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; z-index: 10000;"
-    overlay.innerText = f"Privacy Score: {score}/100\nSummary: {summary}"
-    document.body.appendChild(overlay)
+    try:
+        response = await pyfetch(
+            url=API_URL,
+            method="POST",
+            headers={
+                "Content-Type": "application/json"
+            },
+            body=js.JSON.stringify({
+                "snippet": content[:8000], # Send a safe chunk
+                "source_url": js.window.location.href
+            })
+        )
+        
+        if response.status == 200:
+            data = await response.json()
+            update_ui(data)
+        else:
+            display_error(f"API Error: {response.status}")
+    except Exception as e:
+        display_error(f"Connection failed: {str(e)}")
+
+def update_ui(data):
+    """Updates the popup UI with real analysis data."""
+    score = data.get("risk_score", 0)
+    summary = data.get("summary", "No summary available.")
+    
+    score_element = document.getElementById("score")
+    status_element = document.getElementById("risk-level")
+    summary_element = document.getElementById("summary")
+    
+    score_element.innerText = str(score)
+    
+    # Color coding based on score
+    if score < 30:
+        score_element.style.color = "#27ae60" # Green
+        status_element.innerText = "Safe"
+    elif score < 60:
+        score_element.style.color = "#f39c12" # Orange
+        status_element.innerText = "Moderate Risk"
+    else:
+        score_element.style.color = "#e74c3c" # Red
+        status_element.innerText = "High Risk"
+        
+    summary_element.innerText = summary
 
 def display_error(message):
-    error_overlay = document.createElement("div")
-    error_overlay.style.cssText = "position: fixed; top: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 5px; z-index: 10000;"
-    error_overlay.innerText = f"Error: {message}"
-    document.body.appendChild(error_overlay)
+    """Displays an error message in the UI."""
+    document.getElementById("score").innerText = "!"
+    document.getElementById("risk-level").innerText = "Error"
+    document.getElementById("summary").innerText = message
 
-# This would be triggered by a browser event listener in a real extension
-# For PyScript, we might trigger it on page load or a button click
-# analyze_privacy_policy_in_browser() # This would be called by the extension's content script
+# Initialize analysis when the popup is opened
+asyncio.ensure_future(analyze_current_page())

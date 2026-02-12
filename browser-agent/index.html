@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Sentinel AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
@@ -13,14 +15,15 @@
     <div id="app-content">
         <div class="score-container">
             <div id="score" class="score-value">--</div>
-            <div id="risk-level">Scanning...</div>
+            <div id="risk-level">Initializing...</div>
         </div>
         <div id="summary" class="summary">
-            Please wait while we analyze the page's privacy policy.
+            Connecting to Privacy Sentinel AI core...
         </div>
     </div>
     <div class="footer">
-        Powered by Privacy Sentinel AI
+        <p>Pure Python Privacy Engine</p>
+        <p>v1.3.0 | Secure Analysis</p>
     </div>
     <script type="py" src="./agent.py"></script>
 </body>
