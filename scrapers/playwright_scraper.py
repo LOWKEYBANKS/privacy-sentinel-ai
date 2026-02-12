@@ -22,7 +22,8 @@ async def scrape_dynamic_content(url: str) -> str:
             await browser.close()
             
             logger.info("Playwright successfully fetched HTML content. Now extracting with Trafilatura.")
-            extracted_text = trafilatura.extract(html_content, output_format='text', include_comments=False, include_tables=False)
+           extracted_text = trafilatura.extract(html_content, include_comments=False, include_tables=False)
+
             
             if not extracted_text:
                 logger.warning(f"Trafilatura extraction failed for {url}. Falling back to raw HTML.")
