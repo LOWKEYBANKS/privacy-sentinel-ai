@@ -3,6 +3,9 @@ from typing import Optional
 import os
 import stripe
 import logging
+import httpx
+import uuid
+from abc import ABC, abstractmethod
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -20,11 +23,53 @@ mock_user_db = {
         "is_subscribed": False, 
         "level": "free", 
         "stripe_customer_id": None,
+        "flutterwave_customer_id": None,
         "trial_ends_at": datetime.now() + timedelta(days=7),
         "daily_scans": 0,
         "last_scan_date": datetime.now().date()
     }
 }
+
+# Mock transaction storage
+mock_transaction_db = {}
+
+# Flutterwave Configuration
+FLUTTERWAVE_SECRET_KEY = os.getenv("FLUTTERWAVE_SECRET_KEY", "FLWSECK_TEST_MOCK")
+FLUTTERWAVE_BASE_URL = "https://api.flutterwave.com/v3"
+
+class PaymentProvider(ABC):
+    @abstractmethod
+    async def initiate_payment(self, user_id: str, amount: float, currency: str, **kwargs):
+        pass
+
+class FlutterwaveProvider(PaymentProvider):
+    async def initiate_payment(self, user_id: str, amount: float, currency: str, **kwargs):
+        phone_number = kwargs.get("phone_number")
+        network = kwargs.get("network", "M-PESA")
+        country = kwargs.get("country", "KE")
+        
+        # 1. Create/Get Customer (Simplified for demo)
+        customer_id = mock_user_db[user_id].get("flutterwave_customer_id") or f"cus_flw_{user_id}"
+        
+        # 2. In a real implementation, we would call Flutterwave API here
+        # For this task, we'll simulate the logic and provide the implementation structure
+        
+        transaction_id = f"flw_tx_{uuid.uuid4().hex[:8]}"
+        mock_transaction_db[transaction_id] = {
+            "user_id": user_id,
+            "status": "pending",
+            "amount": amount,
+            "currency": currency
+        }
+        
+        logger.info(f"Flutterwave: Initiated {network} payment for {user_id} ({phone_number})")
+        return {
+            "status": "success",
+            "transaction_id": transaction_id,
+            "message": f"STK Push sent to {phone_number}. Please authorize the {currency} {amount} payment."
+        }
+
+payment_gateway = FlutterwaveProvider()
 
 async def get_current_user():
     # Mock authentication - in production, this would be a JWT or OAuth dependency
@@ -71,18 +116,46 @@ async def create_checkout_session(user_id: str = Depends(get_current_user)):
         }
 
 @router.post("/subscription/mobile-money/initiate")
-async def initiate_mobile_money(phone_number: str, user_id: str = Depends(get_current_user)):
+async def initiate_mobile_money(
+    phone_number: str, 
+    network: str = "M-PESA",
+    currency: str = "KES",
+    user_id: str = Depends(get_current_user)
+):
     """
-    Initiates a Mobile Money payment (e.g., M-Pesa STK Push).
-    In production, this would call Flutterwave or a similar API.
+    Initiates a Mobile Money payment via Flutterwave.
     """
-    logger.info(f"Initiating Mobile Money payment for {phone_number}")
-    # Mock successful initiation
-    return {
-        "status": "success",
-        "message": "STK Push sent to your phone. Please enter your PIN to authorize the \$1 payment.",
-        "transaction_id": f"tx_mock_{user_id}"
-    }
+    # $1 USD is approx 130 KES (example rate)
+    amount = 130.0 if currency == "KES" else 1.0
+    
+    result = await payment_gateway.initiate_payment(
+        user_id=user_id,
+        amount=amount,
+        currency=currency,
+        phone_number=phone_number,
+        network=network
+    )
+    return result
+
+@router.post("/subscription/flutterwave/webhook")
+async def flutterwave_webhook(request: Request):
+    """Handles Flutterwave Webhooks for mobile money payments."""
+    # In production, verify signature: request.headers.get('verif-hash')
+    data = await request.json()
+    
+    if data.get("status") == "successful":
+        tx_id = data.get("tx_ref") or data.get("id")
+        tx_data = mock_transaction_db.get(tx_id)
+        
+        if tx_data:
+            user_id = tx_data["user_id"]
+            if user_id in mock_user_db:
+                mock_user_db[user_id]["is_subscribed"] = True
+                mock_user_db[user_id]["level"] = "pro"
+                tx_data["status"] = "completed"
+                logger.info(f"Mobile Money subscription activated for user: {user_id}")
+    
+    return {"status": "success"}
 
 @router.post("/subscription/webhook")
 async def stripe_webhook(request: Request):
