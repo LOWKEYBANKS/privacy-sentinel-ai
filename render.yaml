@@ -2,6 +2,8 @@ services:
   - type: web
     name: privacy-sentinel-api
     env: python
+    region: oregon
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: cd agent && gunicorn -w 4 -k uvicorn.workers.UvicornWorker api.summarizer:app --bind 0.0.0.0:10000
     envVars:
@@ -22,8 +24,10 @@ services:
 databases:
   - name: privacy-sentinel-db
     plan: free
+    region: oregon
 
 redis:
   - name: privacy-sentinel-redis
     plan: free
-    ipAllowList: [] # Only allow internal connections
+    region: oregon
+    ipAllowList: []
