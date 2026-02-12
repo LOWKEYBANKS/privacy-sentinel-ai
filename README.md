@@ -2,6 +2,8 @@
 
 AI-powered privacy protection platform that intercepts data collection practices across Desktop and Mobile.
 
+**Created and maintained by [LOWKEYBANKS](https://github.com/LOWKEYBANKS) and Partner Lorrah.**
+
 ## 🚀 Dual-Platform Strategy
 
 ### 💻 Desktop: The Web Extension
