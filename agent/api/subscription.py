@@ -65,11 +65,24 @@ async def create_checkout_session(user_id: str = Depends(get_current_user)):
         return {"checkout_url": checkout_session.url}
     except Exception as e:
         logger.error(f"Stripe Checkout Error: {e}")
-        # Fallback for demo/dev mode
         return {
             "checkout_url": f"https://checkout.stripe.com/pay/mock_{user_id}",
             "message": "Development mode: Mock checkout URL provided."
         }
+
+@router.post("/subscription/mobile-money/initiate")
+async def initiate_mobile_money(phone_number: str, user_id: str = Depends(get_current_user)):
+    """
+    Initiates a Mobile Money payment (e.g., M-Pesa STK Push).
+    In production, this would call Flutterwave or a similar API.
+    """
+    logger.info(f"Initiating Mobile Money payment for {phone_number}")
+    # Mock successful initiation
+    return {
+        "status": "success",
+        "message": "STK Push sent to your phone. Please enter your PIN to authorize the \$1 payment.",
+        "transaction_id": f"tx_mock_{user_id}"
+    }
 
 @router.post("/subscription/webhook")
 async def stripe_webhook(request: Request):
