@@ -40,8 +40,8 @@ async def analyze_current_page(event=None):
     
     # Update UI to loading state
     score_element.innerText = "..."
-    status_element.innerText = "Analyzing..."
-    summary_element.innerText = "Sentinel is scanning the page content for privacy risks..."
+    status_element.innerText = "Auto-Scanning..."
+    summary_element.innerText = "Desktop Sentinel is analyzing policies in the background..."
     
     content = await get_active_tab_content()
     

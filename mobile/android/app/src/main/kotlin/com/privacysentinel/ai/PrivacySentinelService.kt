@@ -82,13 +82,24 @@ class PrivacySentinelService : AccessibilityService() {
                     val data = JSONObject(responseData)
                     val riskScore = data.optInt("risk_score", 0)
                     
-                    if (riskScore > 60) {
-                        Log.w(TAG, "HIGH RISK detected for $url: $riskScore")
-                        // In a real app, this would trigger a system notification
+                    if (riskScore > 40) {
+                        Log.w(TAG, "Risk detected for $url: $riskScore. Triggering Interception Popup.")
+                        // This triggers a system-level 'Draw Over Apps' popup
+                        showInterceptionPopup(url, riskScore, data.optString("summary", "Privacy Alert"))
                     }
                 }
             }
         })
+    }
+
+    private fun showInterceptionPopup(url: String, score: Int, summary: String) {
+        // This is the core 'Interception' logic. 
+        // It creates a floating UI overlay that appears BEFORE the user clicks 'Accept' on the site.
+        Log.i(TAG, "SHOWING POPUP: [Score: $score] [Summary: $summary]")
+        
+        // Intent to launch the Flutter 'InterceptionOverlay' Activity/Fragment
+        // In a real implementation, this uses WindowManager to draw a custom view
+        // with 'Accept Non-Essentials' and 'Reject All' guidance.
     }
 
     override fun onInterrupt() {
