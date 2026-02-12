@@ -8,8 +8,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    build-essential \
-    python3-dev \
     libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -20,9 +18,7 @@ RUN useradd --create-home --shell /bin/bash appuser
 # Copy requirements first (for Docker layer caching)
 # Note: requirements.txt should be in the build context
 COPY requirements.txt .
-# Install build tools and pin dependencies to resolve gensim/lexnlp build issues
-RUN pip install --no-cache-dir "setuptools<70.0.0" "wheel" "Cython<3.0.0" "numpy<2.0.0" && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .

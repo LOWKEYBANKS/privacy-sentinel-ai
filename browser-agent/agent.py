@@ -1,86 +1,49 @@
 import js
 from pyodide.http import pyfetch
-import asyncio
-import json
+from pyscript import document
 
-class BrowserPrivacyAgent:
-    def __init__(self):
-        # Dynamically determine API URL: use production if not on localhost
-        self.api_url = "https://privacy-sentinel-api.onrender.com" if "localhost" not in js.window.location.hostname else "http://localhost:8000"
-        self.detection_keywords = ["privacy", "policy", "terms", "data protection", "legal", "compliance", "gdpr"]
-        
-    async def scan_current_page(self):
-        js.console.log("Privacy Sentinel: Scanning page...")
-        
-        # Update UI to show scanning state
-        self.update_ui_status("Scanning...", "--", "Searching for privacy policy links...")
-        
-        links = js.document.querySelectorAll("a")
-        found_policies = []
-        for i in range(links.length):
-            link = links.item(i)
-            text = link.innerText.lower()
-            href = link.getAttribute("href")
-            if href and any(keyword in text for keyword in self.detection_keywords):
-                found_policies.append({"text": text, "url": href})
-        
-        if found_policies:
-            policy_url = found_policies[0]['url']
-            if not policy_url.startswith('http'):
-                policy_url = js.window.location.origin + policy_url
-            js.console.log(f"Privacy Sentinel: Analyzing {policy_url}")
-            await self.analyze_policy(policy_url)
-        else:
-            self.update_ui_status("No Policy Found", "N/A", "No privacy policy links detected on this page.")
-            js.console.log("Privacy Sentinel: No policies detected")
+# Placeholder for Trafilatura integration
+# from trafilatura import extract
 
-    def update_ui_status(self, status, score, summary=None):
-        score_el = js.document.getElementById("score")
-        status_el = js.document.getElementById("risk-level")
-        summary_el = js.document.getElementById("summary")
-        
-        if score_el: score_el.innerText = score
-        if status_el: status_el.innerText = status
-        if summary_el and summary: summary_el.innerText = summary
+def get_page_content():
+    # This function would extract the main content of the page
+    # For now, it's a placeholder
+    return js.document.documentElement.outerHTML
 
-    async def analyze_policy(self, url):
-        try:
-            payload = {
-                "source_url": url,
-                "snippet": f"Policy found at {url}. Analyzing for privacy risks...",
-                "timestamp": js.Date.new().toISOString()
-            }
-            response = await pyfetch(
-                url=f"{self.api_url}/api/summarize",
-                method="POST",
-                headers={"Content-Type": "application/json"},
-                body=json.dumps(payload)
-            )
-            if response.status == 200:
-                data = await response.json()
-                risk_score = data.get('risk_score', 0)
-                summary = data.get('summary', 'Analysis complete.')
-                
-                # Update UI
-                self.update_ui_status(
-                    status="High Risk" if risk_score >= 70 else "Medium Risk" if risk_score >= 40 else "Low Risk",
-                    score=str(risk_score),
-                    summary=summary
-                )
-                self.show_alert(data)
-            else:
-                self.update_ui_status("Error", "!", "Failed to connect to analysis server.")
-        except Exception as e:
-            self.update_ui_status("Error", "!", f"Connection failed: {str(e)}")
-            js.console.error(f"Privacy Sentinel: Analysis failed: {str(e)}")
+async def analyze_privacy_policy_in_browser():
+    content = get_page_content()
+    # In the future, we will use Trafilatura here
+    # extracted_text = extract(content)
+    
+    # For now, simulate sending to API
+    response = await pyfetch(
+        url="https://privacy-sentinel-api.onrender.com/api/summarize",
+        method="POST",
+        headers={
+            "Content-Type": "application/json"
+        },
+        body=js.JSON.stringify({"snippet": content})
+    )
+    
+    if response.status == 200:
+        data = await response.json()
+        display_risk_score(data.risk_score, data.summary)
+    else:
+        display_error("Failed to analyze privacy policy.")
 
-    def show_alert(self, analysis):
-        risk_score = analysis.get('risk_score', 0)
-        color = "#ff4d4d" if risk_score >= 70 else "#ffa500" if risk_score >= 40 else "#4CAF50"
-        alert_div = js.document.createElement("div")
-        alert_div.style.cssText = f"position:fixed; top:20px; right:20px; padding:15px; background:white; border-left:5px solid {color}; box-shadow:0 4px 8px rgba(0,0,0,0.2); z-index:9999; max-width:300px; font-family:sans-serif;"
-        alert_div.innerHTML = f'<h4>🛡️ Privacy Sentinel</h4><p>Risk Score: <strong>{risk_score}/100</strong></p><p style="font-size:12px;">{analysis.get("summary", "")}</p><button onclick="this.parentElement.remove()">Dismiss</button>'
-        js.document.body.appendChild(alert_div)
+def display_risk_score(score, summary):
+    # Create a simple overlay to display the score
+    overlay = document.createElement("div")
+    overlay.style.cssText = "position: fixed; top: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; z-index: 10000;"
+    overlay.innerText = f"Privacy Score: {score}/100\nSummary: {summary}"
+    document.body.appendChild(overlay)
 
-agent = BrowserPrivacyAgent()
-asyncio.ensure_future(agent.scan_current_page())
+def display_error(message):
+    error_overlay = document.createElement("div")
+    error_overlay.style.cssText = "position: fixed; top: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 5px; z-index: 10000;"
+    error_overlay.innerText = f"Error: {message}"
+    document.body.appendChild(error_overlay)
+
+# This would be triggered by a browser event listener in a real extension
+# For PyScript, we might trigger it on page load or a button click
+# analyze_privacy_policy_in_browser() # This would be called by the extension's content script

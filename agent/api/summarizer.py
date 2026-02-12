@@ -7,6 +7,8 @@ granular risk scoring, and multi-language support.
 import hashlib
 import logging
 import json
+import trafilatura
+from scrapers.playwright_scraper import scrape_dynamic_content
 import os
 from datetime import datetime
 from typing import List, Optional
@@ -44,20 +46,19 @@ class SecurityConfig:
 
 # LLM Client Setup
 llm_mode = os.getenv("LLM_MODE", "development")
-ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434/v1")
 client = None
-
 if llm_mode == "production":
     client = OpenAI()
-elif llm_mode == "local":
-    # Use OpenAI client pointed to Ollama's local API
-    client = OpenAI(base_url=ollama_base_url, api_key="ollama")
 
 app = FastAPI(
     title="Privacy Sentinel AI", 
     version="1.3.0",
     description="AI-powered privacy policy analysis with specialized legal intelligence and multi-language support"
 )
+
+# Include subscription router
+from . import subscription
+app.include_router(subscription.router, prefix="/api")
 
 # CORS configuration
 app.add_middleware(
@@ -71,7 +72,7 @@ app.add_middleware(
 # Database connection
 def get_db_connection():
     try:
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"), 
+        conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "localhost"),
             database=os.getenv("DB_NAME", "privacy_sentinel"),
             user=os.getenv("DB_USER", "dev"),
@@ -121,6 +122,11 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
         try:
             knowledge_context = json.dumps(LEGAL_FRAMEWORKS, indent=2)
             
+            # Use Trafilatura to extract main content from the HTML snippet
+            extracted_text = trafilatura.extract(text, output_format='text', include_comments=False, include_tables=False)
+            if not extracted_text:
+                extracted_text = text # Fallback to raw text if extraction fails
+
             prompt = f"""
             You are a specialized Privacy Legal Expert. Analyze the following privacy policy snippet (Language: {language}).
             
@@ -135,7 +141,7 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
             5. 'legal_violations': A list of potential violations against GDPR, CCPA, or HIPAA.
             6. 'recommended_action': Clear, actionable advice for the user.
 
-            Snippet: {text[:4000]}
+            Snippet: {extracted_text[:4000]}
             """
             response = client.chat.completions.create(
                 model="gpt-4.1-mini",
@@ -147,26 +153,7 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
         except Exception as e:
             logger.error(f"Specialized LLM Analysis failed: {e}")
     
-    # Local / Fallback Mode
-    if llm_mode == "local" and client:
-        try:
-            knowledge_context = json.dumps(LEGAL_FRAMEWORKS, indent=2)
-            prompt = f"""
-            You are a specialized Privacy Legal Expert. Analyze the following privacy policy snippet.
-            Use this Legal Knowledge Base for reference: {knowledge_context}
-            Provide a JSON response with summary, risk_score, risk_breakdown, risks, legal_violations, and recommended_action.
-            Snippet: {text[:4000]}
-            """
-            response = client.chat.completions.create(
-                model=os.getenv("OLLAMA_MODEL", "mistral"),
-                messages=[{"role": "system", "content": "You are a Privacy Sentinel AI."},
-                          {"role": "user", "content": prompt}],
-                response_format={"type": "json_object"}
-            )
-            return json.loads(response.choices[0].message.content)
-        except Exception as e:
-            logger.error(f"Local Ollama Analysis failed: {e}")
-
+    # Fallback / Development Mode
     risks = detect_privacy_risks_fallback(text)
     score = calculate_risk_score_fallback(risks)
     return {
@@ -202,13 +189,23 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
     content_hash = hashlib.sha256(request.snippet.encode('utf-8')).hexdigest()[:16]
     
     try:
+        # Determine content for analysis
+        content_to_analyze = request.snippet
+        if request.source_url:
+            logger.info(f"Source URL provided: {request.source_url}. Using Playwright scraper.")
+            scraped_content = scrape_dynamic_content(request.source_url)
+            if scraped_content:
+                content_to_analyze = scraped_content
+            else:
+                raise HTTPException(status_code=400, detail="Failed to scrape content from the provided URL.")
+
         # Detect language
         try:
-            detected_lang = detect(request.snippet)
+            detected_lang = detect(content_to_analyze)
         except:
             detected_lang = "unknown"
             
-        analysis = await perform_specialized_analysis(request.snippet, detected_lang)
+        analysis = await perform_specialized_analysis(content_to_analyze, detected_lang)
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
         
         background_tasks.add_task(
@@ -251,9 +248,6 @@ async def log_analysis_result(content_hash: str, risk_score: int, risk_count: in
         conn.close()
     except Exception as e:
         logger.error(f"Audit log failed: {e}")
-        # In mock/dev mode, don't fail the whole request if DB is down
-        if os.getenv("LLM_MODE") == "mock":
-            logger.warning("Continuing without audit log in mock mode")
 
 if __name__ == "__main__":
     import uvicorn
