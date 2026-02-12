@@ -6,7 +6,7 @@ import json
 class BrowserPrivacyAgent:
     def __init__(self):
         # Dynamically determine API URL: use production if not on localhost
-        self.api_url = "https://api.privacysentinel.ai" if "localhost" not in js.window.location.hostname else "http://localhost:8000"
+        self.api_url = "https://privacy-sentinel-api.onrender.com" if "localhost" not in js.window.location.hostname else "http://localhost:8000"
         self.detection_keywords = ["privacy", "policy", "terms", "data protection", "legal", "compliance", "gdpr"]
         
     async def scan_current_page(self):
