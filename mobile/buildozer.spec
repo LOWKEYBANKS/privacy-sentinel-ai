@@ -14,7 +14,7 @@ android.permissions = INTERNET, SYSTEM_ALERT_WINDOW, BIND_ACCESSIBILITY_SERVICE,
 android.api = 31
 android.minapi = 21
 android.sdk = 31
-android.ndk = 23b
+android.ndk = 25b
 android.arch = arm64-v8a
 services = SentinelService:service.py:foreground:sticky
 

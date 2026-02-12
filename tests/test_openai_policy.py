@@ -1,6 +1,7 @@
 import httpx
 import asyncio
 import json
+import pytest
 
 API_URL = "https://privacy-sentinel-api.onrender.com/api/summarize"
 
@@ -16,6 +17,7 @@ Types of cookies include _puid (7 days), _uasid (1 day), _account (session), oai
 Third-party cookies: We use third-party services like Google Analytics and Intercom which may set their own cookies.
 """
 
+@pytest.mark.asyncio
 async def test_policy_analysis():
     print("Testing Privacy Sentinel AI Engine with OpenAI Cookie Policy...")
     
