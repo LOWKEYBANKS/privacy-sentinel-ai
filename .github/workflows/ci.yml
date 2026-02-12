@@ -1,9 +1,11 @@
 name: Privacy Sentinel AI CI
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,9 +22,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install "numpy<2.0.0" "setuptools<70.0.0" "Cython<3.0.0"
         pip install -r requirements.txt
-        pip install pytest pytest-asyncio httpx
+        playwright install
         
     - name: Run tests
       run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
         export DATABASE_URL=postgresql://dev:dev@localhost:5432/privacy_sentinel
         pytest tests/
