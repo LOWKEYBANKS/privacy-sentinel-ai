@@ -193,7 +193,7 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
         content_to_analyze = request.snippet
         if request.source_url:
             logger.info(f"Source URL provided: {request.source_url}. Using Playwright scraper.")
-            scraped_content = scrape_dynamic_content(request.source_url)
+            scraped_content = await scrape_dynamic_content(request.source_url)
             if scraped_content:
                 content_to_analyze = scraped_content
             else:
