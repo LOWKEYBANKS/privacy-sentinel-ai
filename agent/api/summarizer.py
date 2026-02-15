@@ -121,6 +121,7 @@ class RiskBreakdown(BaseModel):
 
 class PrivacyAnalysisResponse(BaseModel):
     summary: str
+    cookie_summary: Optional[str] = "No specific cookie information detected."
     risk_score: int
     risk_breakdown: RiskBreakdown
     risks: List[str]
@@ -151,11 +152,12 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
             
             Provide a JSON response with:
             1. 'summary': A professional 2-sentence summary of privacy implications.
-            2. 'risk_score': An overall integer from 0-100.
-            3. 'risk_breakdown': {{'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}}
-            4. 'risks': A list of specific risk categories.
-            5. 'legal_violations': A list of potential violations against GDPR, CCPA, or HIPAA.
-            6. 'recommended_action': Clear, actionable advice for the user.
+            2. 'cookie_summary': A specific breakdown of cookie types used (Tracking, Marketing, Essential) and their intrusiveness.
+            3. 'risk_score': An overall integer from 0-100.
+            4. 'risk_breakdown': {'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}
+            5. 'risks': A list of specific risk categories.
+            6. 'legal_violations': A list of potential violations against GDPR, CCPA, HIPAA, or ePrivacy (Cookie Law).
+            7. 'recommended_action': Clear, actionable advice for the user.
 
             Snippet: {extracted_text[:4000]}
             """
@@ -245,6 +247,7 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
         
         return PrivacyAnalysisResponse(
             summary=analysis['summary'],
+            cookie_summary=analysis.get('cookie_summary', 'No specific cookie information detected.'),
             risk_score=analysis['risk_score'],
             risk_breakdown=analysis.get('risk_breakdown', {
                 "data_collection": 0, "third_party_sharing": 0, "user_rights": 0, "data_retention": 0

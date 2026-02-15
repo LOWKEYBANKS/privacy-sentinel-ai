@@ -47,13 +47,13 @@ async def find_policy_links():
             active_tab = tabs[0]
             
             # Find links containing "policy", "privacy", or "cookie"
-            # Using a string literal for the JS function to maintain pure Python environment for the agent logic
+            # Enhanced to prioritize cookie policies when cookies are the focus
             link_detection_script = """
             () => {
                 const links = Array.from(document.querySelectorAll('a'));
                 const policyLinks = links.filter(a => 
-                    /privacy|cookie|policy/i.test(a.innerText) || 
-                    /privacy|cookie|policy/i.test(a.href)
+                    /privacy|cookie|policy|consent/i.test(a.innerText) || 
+                    /privacy|cookie|policy|consent/i.test(a.href)
                 ).map(a => a.href);
                 return policyLinks;
             }
@@ -120,10 +120,12 @@ def update_ui(data):
     """Updates the popup UI with real analysis data."""
     score = data.get("risk_score", 0)
     summary = data.get("summary", "No summary available.")
+    cookie_info = data.get("cookie_summary", "No specific cookie data.")
     
     score_element = document.getElementById("score")
     status_element = document.getElementById("risk-level")
     summary_element = document.getElementById("summary")
+    cookie_element = document.getElementById("cookie-profile")
     
     score_element.innerText = str(score)
     
@@ -142,6 +144,8 @@ def update_ui(data):
         status_element.style.color = "#e74c3c"
         
     summary_element.innerText = summary
+    if cookie_element:
+        cookie_element.innerText = f"🍪 Cookie Analysis: {cookie_info}"
 
 def display_error(message):
     """Displays an error message in the UI."""

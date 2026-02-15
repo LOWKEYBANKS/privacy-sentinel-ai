@@ -43,6 +43,19 @@ LEGAL_FRAMEWORKS = {
             "Unauthorized sharing of medical history",
             "Lack of encryption for health records"
         ]
+    },
+    "EPRIVACY": {
+        "full_name": "ePrivacy Directive (EU Cookie Law)",
+        "key_requirements": [
+            "Informed consent before setting non-essential cookies",
+            "Clear explanation of cookie purposes",
+            "Right to withdraw consent at any time"
+        ],
+        "critical_violations": [
+            "Setting tracking cookies without prior consent",
+            "Pre-ticked consent boxes",
+            "Lack of a 'Reject All' option for cookies"
+        ]
     }
 }
 
