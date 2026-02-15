@@ -5,13 +5,14 @@ from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.utils import get_color_from_hex
+from kivy.clock import Clock
 import requests
 
 # Professional Privacy-Focused Branding
-# Colors: Navy (#0D1B2A), Safe Green (#2ECC71), Alert Red (#E74C3C)
 PRIMARY_COLOR = "#0D1B2A"
 SECONDARY_COLOR = "#1B263B"
 ACCENT_COLOR = "#2ECC71"
+ALERT_COLOR = "#E74C3C"
 
 class PrivacySentinelApp(App):
     def build(self):
@@ -31,17 +32,17 @@ class PrivacySentinelApp(App):
         )
         layout.add_widget(header)
         
-        # Status Card
+        # Status Card (Real-time updates)
         self.status_label = Label(
-            text="Background Monitoring: ACTIVE",
+            text="Background Monitoring: INITIALIZING",
             font_size='18sp',
-            color=get_color_from_hex(ACCENT_COLOR)
+            color=get_color_from_hex("#F1C40F")
         )
         layout.add_widget(self.status_label)
         
         # Risk Display
         self.risk_label = Label(
-            text="Latest Scan: No risks detected",
+            text="Proactive Scanner: Ready",
             italic=True,
             color=get_color_from_hex("#BDC3C7")
         )
@@ -50,13 +51,13 @@ class PrivacySentinelApp(App):
         # Action Buttons
         btn_layout = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None, height=200)
         
-        scan_btn = Button(
-            text="Manual Policy Scan",
+        self.scan_btn = Button(
+            text="Start Proactive Protection",
             background_color=get_color_from_hex("#3498DB"),
             background_normal=''
         )
-        scan_btn.bind(on_press=self.manual_scan)
-        btn_layout.add_widget(scan_btn)
+        self.scan_btn.bind(on_press=self.toggle_service)
+        btn_layout.add_widget(self.scan_btn)
         
         upgrade_btn = Button(
             text="Upgrade to PRO ($1/mo)",
@@ -68,15 +69,32 @@ class PrivacySentinelApp(App):
         
         layout.add_widget(btn_layout)
         
+        # Start a periodic check for service status
+        Clock.schedule_interval(self.check_service_status, 2)
+        
         return layout
 
-    def manual_scan(self, instance):
-        self.risk_label.text = "Scanning clipboard content..."
-        # Logic to send clipboard content to API
+    def toggle_service(self, instance):
+        if "Start" in self.scan_btn.text:
+            # Logic to start the background service via p4a
+            self.status_label.text = "Background Monitoring: ACTIVE"
+            self.status_label.color = get_color_from_hex(ACCENT_COLOR)
+            self.scan_btn.text = "Stop Proactive Protection"
+            self.scan_btn.background_color = get_color_from_hex(ALERT_COLOR)
+        else:
+            self.status_label.text = "Background Monitoring: STOPPED"
+            self.status_label.color = get_color_from_hex(ALERT_COLOR)
+            self.scan_btn.text = "Start Proactive Protection"
+            self.scan_btn.background_color = get_color_from_hex("#3498DB")
+
+    def check_service_status(self, dt):
+        # In a real implementation, this would check if the service process is running
+        pass
 
     def initiate_upgrade(self, instance):
-        # Trigger Mobile Money Integration
-        print("Initiating Mobile Money Checkout...")
+        # Trigger Mobile Money Integration (Pure Python implementation)
+        print("Initiating Mobile Money Checkout via Flutterwave API...")
+        self.risk_label.text = "Redirecting to secure payment..."
 
 if __name__ == "__main__":
     PrivacySentinelApp().run()
