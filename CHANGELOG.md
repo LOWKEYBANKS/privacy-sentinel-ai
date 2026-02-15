@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.0] - 2026-02-15
+
+### **Added**
+- **100% Pure Python Ecosystem:** Successfully eliminated all JavaScript, Kotlin, and C++ source artifacts from the project logic.
+- **Proactive Mobile Monitoring:** Implemented a background service for Android using **PyJNIus** to interface with Accessibility APIs directly from Python.
+- **PyScript Integration:** Stabilized the browser extension to run 100% Python logic via WebAssembly, enabling proactive scanning of privacy policies.
+- **Python-Native n8n Workflows:** Replaced JavaScript hash nodes with Python-based nodes in the `policy_monitor` workflow.
+- **Subscription Engine:** Added backend support for $1/month Proactive Mode with Stripe and Flutterwave integrations.
+
+### **Fixed**
+- **GitHub Actions CI/CD:** Resolved `pytest-asyncio` configuration issues and added missing dependencies to the pipeline.
+- **Module Imports:** Fixed relative import issues and added missing `__init__.py` files to ensure project-wide package stability.
+- **Language Statistics:** Purged `.buildozer` and other non-Python build artifacts to ensure GitHub correctly identifies the project as Pure Python.
+
+### **Changed**
+- **Documentation:** Completely overhauled the `Tools and Technology Stack` and `Mobile Background Logic` docs to reflect the pure Python architecture.
+- **Deployment:** Optimized `render.yaml` for high-performance Python deployment on Render.com.
+
 ## v1.0.0 - 2026-02-12
 
 ### Added

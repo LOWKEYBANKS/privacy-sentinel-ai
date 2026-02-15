@@ -1,106 +1,70 @@
 # 🛠️ Privacy Sentinel AI - Open Source Tools & Technology Stack
 
-> **Last Updated:** 2026-02-12  
-> **Version:** 1.1.0  
-> **Status:** Production-Ready with Professional Standards
+> **Last Updated:** 2026-02-15  
+> **Version:** 1.3.0  
+> **Status:** Production-Ready | 100% Pure Python Ecosystem
 
 ---
 
-## ⚠️ **Licenses & Usage Considerations**
-
-| Tool | License | Usage Caveats | Commercial Use |
-|------|---------|---------------|----------------|
-| [PyScript](https://pyscript.net/) | Apache 2.0 | Enables Python in the browser via WebAssembly | Yes |
-| [Ollama](https://ollama.ai/) | Apache 2.0 | Free serveware, check model licenses separately | Yes |
-| [Mistral 7B](https://mistral.ai/) | Apache 2.0 | Free for commercial use | Yes |
-| [LLaMA 3](https://llama.meta.com/) | Llama 3 Community License | Free but requires Meta permission for >700M users | Yes (with terms) |
-| [Unstructured.io](https://unstructured.io/) | Apache 2.0 | Open source core, commercial features exist | Yes |
-| [n8n](https://n8n.io/) | Apache 2.0 | Self-hosted is free, cloud has pricing | Yes (self-hosted) |
-| [JustlyAI LMSS](https://github.com/JustlyAI/lmss_entity_extractor) | MIT | Completely free | Yes |
-| [Label Studio](https://labelstud.io/) | Apache 2.0 | Free self-hosted, cloud has limits | Yes (self-hosted) |
-
-> **Note:** This is not a legal compliance analysis. Consult with legal counsel for production use.
-
----
-
-## 🏗️ **Core Infrastructure**
-
-### **Container & Deployment**
-- [Docker](https://www.docker.com/) - **(In Use)** Container platform for all services
-- [Docker Compose](https://docs.docker.com/compose/) - **(In Use)** Multi-service orchestration for local development
-- [GitHub Actions](https://github.com/features/actions) - **(In Use)** CI/CD pipeline automation
-- [Render.com](https://render.com/) - **(In Use)** Cloud platform for production deployment
-
-### **Database & Storage**
-- [PostgreSQL](https://www.postgresql.org/) - **(In Use)** Primary relational database
-- [MinIO](https://min.io/) / S3 - **(Planned)** File storage for documents and media
-- [Redis](https://redis.io/) - **(In Use)** Caching layer for fast responses
-
----
-
-## 🕷️ **Web Discovery & Extraction (Pure Python Strategy)**
-
-### **Web Crawling & Browser Automation**
-- [Playwright](https://playwright.dev/) - **(Planned)** Primary tool for backend scraping of dynamic, JavaScript-heavy websites.
-- **Note:** Non-Python tools like `Crawlee (Node.js)` and `Colly (Go)` are explicitly **avoided** to maintain the pure Python ecosystem.
-
-### **Document Processing**
-- [Trafilatura](https://trafilatura.readthedocs.io/) - **(Next Step)** To be integrated as the primary tool for robust text and metadata extraction from web pages.
-- [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/) - **(In Use)** Currently used for basic HTML parsing within the PyScript browser extension.
-- [Apache Tika](https://tika.apache.org/) - **(Planned)** For universal document parsing (PDF, DOCX, etc.) in the backend.
-- [Unstructured.io](https://unstructured.io/) - **(Planned)** For advanced document parsing and ML-powered chunking.
-- [JustlyAI LMSS Entity Extractor](https://github.com/JustlyAI/lmss_entity_extractor) - **(Planned)** For advanced legal semantic classification.
-
----
-
-## 🤖 **AI & Machine Learning**
-
-### **Model Inference**
-- [Ollama](https://ollama.ai/) - **(Planned)** For local LLM serving, fulfilling the privacy-first requirement.
-- [Mistral 7B](https://mistral.ai/news/mistral-7b) / [LLaMA 3](https://llama.meta.com/) - **(Planned)** Primary open-source models for local analysis via Ollama.
-
-### **Cloud API Alternatives**
-- [OpenAI API](https://openai.com/api/) - **(In Use)** GPT-4o-mini is used for the current production backend on Render.com.
+## 🏗️ **Core Philosophy: Pure Python Ecosystem**
+Privacy Sentinel AI is built on a **100% Pure Python** strategy. By eliminating JavaScript, Kotlin, and other non-Python languages from our logic, we ensure:
+- **Security:** Reduced attack surface by maintaining a single runtime.
+- **Maintainability:** Unified codebase across Backend, Browser, and Mobile.
+- **Privacy:** Total control over the intelligence engine without third-party language overhead.
 
 ---
 
 ## 🌐 **Frontend & User Interfaces**
 
-### **Browser Extension (Pure Python)**
-- [PyScript](https://pyscript.net/) - **(In Use)** Core technology enabling the use of Python for the browser extension, avoiding JavaScript.
-- [Manifest V3](https://developer.chrome.com/docs/extensions/mv3/intro/) - **(In Use)** The extension is packaged using the modern browser standard.
-- [Chrome/Firefox/Safari WebExtensions API](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions) - **(In Use)** Interacting with native browser functions via PyScript.
+### **Browser Extension (Desktop/Laptop)**
+- **[PyScript](https://pyscript.net/)** - **(In Use)** Core technology enabling Python logic in the browser via WebAssembly.
+- **[Manifest V3](https://developer.chrome.com/docs/extensions/mv3/intro/)** - **(In Use)** Modern extension packaging standard.
+- **[BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/)** - **(In Use)** Local HTML parsing for proactive link detection.
 
-### **Mobile Applications**
-- [Flutter](https://flutter.dev/) - **(Planned)** Cross-platform framework for the mobile UI (iOS + Android).
-- [Android Accessibility Services](https://developer.android.com/guide/topics/ui/accessibility/services) / [iOS Screen Time API](https://developer.apple.com/documentation/screen_time) - **(Planned)** For system-level background monitoring.
+### **Mobile Applications (Android/iOS)**
+- **[Kivy](https://kivy.org/)** - **(In Use)** Cross-platform Python framework for native UI.
+- **[PyJNIus](https://github.com/kivy/pyjnius)** - **(In Use)** Python-to-Java bridge for interacting with Android Accessibility Services.
+- **[python-for-android](https://github.com/kivy/python-for-android)** - **(In Use)** Toolchain for packaging Python into native mobile binaries.
 
 ---
 
-## 🛣️ **Implementation Status & Priority**
+## 🕷️ **Data Extraction & Processing**
 
-### **Phase 0 & 1 (Foundation & MVP) - COMPLETED** ✅
+### **Web Scraping**
+- **[Playwright (Python)](https://playwright.dev/python/)** - **(In Use)** Backend scraping for dynamic, JS-heavy websites.
+- **[Trafilatura](https://trafilatura.readthedocs.io/)** - **(In Use)** High-performance text and metadata extraction.
 
-- [x] **Core API:** FastAPI + PostgreSQL backend is live on Render.com.
-- [x] **Containerization:** Docker Compose is configured for local development.
-- [x] **CI/CD:** GitHub Actions pipeline is operational with automated tests.
-- [x] **Cloud LLM:** OpenAI GPT-4o-mini is integrated for production analysis.
-- [x] **Browser Extension:** A functional PyScript-based extension exists for real-time analysis.
-- [x] **Risk Scoring:** A sophisticated risk scoring algorithm is implemented.
-- [x] **Legal Intelligence:** GDPR, CCPA, and HIPAA knowledge base is integrated.
-- [x] **Multi-language Support:** The system can analyze policies in multiple languages.
+### **Database & Storage**
+- **[PostgreSQL](https://www.postgresql.org/)** - **(In Use)** Primary relational database for audit logs.
+- **[Redis](https://redis.io/)** - **(In Use)** Caching layer for optimized performance.
+- **[Alembic](https://alembic.sqlalchemy.org/)** - **(In Use)** Python-native database migration management.
 
-### **Phase 2 (Intelligence & Extraction) - Current Focus**
+---
 
-- [ ] **Advanced Extraction:** Integrate **Trafilatura** and **Playwright** into the backend for superior data extraction.
-- [ ] **Local LLM Integration:** Implement **Ollama** with **Mistral 7B** as a user-selectable option for private, local inference.
-- [ ] **Semantic Search:** Integrate **JustlyAI LMSS** for deeper legal entity extraction.
-- [ ] **User Dashboard:** Build a Python-based dashboard for users to view their history.
+## 🤖 **AI & Intelligence Engine**
 
-### **Phase 3 (Scale & Platform Growth) - Future**
+### **Analysis API**
+- **[FastAPI](https://fastapi.tiangolo.com/)** - **(In Use)** High-performance asynchronous Python framework.
+- **[OpenAI Python SDK](https://github.com/openai/openai-python)** - **(In Use)** Integration with GPT-4o-mini for production-grade legal analysis.
+- **[LangDetect](https://github.com/Mimino666/langdetect)** - **(In Use)** Automatic policy language detection.
 
-- [ ] **Mobile App:** Develop the **Flutter**-based mobile application for iOS and Android.
-- [ ] **Subscription System:** Implement the $1/month subscription model with Stripe/LemonSqueezy.
-- [ ] **Automated Workflows:** Use **n8n** for advanced workflow automation.
-- [ ] **Vector Database:** Implement **Milvus** or **ChromaDB** for a full-fledged RAG system.
-- [ ] **Monitoring:** Set up **Prometheus** and **Grafana** for enterprise-grade observability.
+---
+
+## 🛣️ **Implementation Roadmap & Status**
+
+### **Phase 1: Foundation (COMPLETED) ✅**
+- [x] **Pure Python Backend:** FastAPI core live on Render.com.
+- [x] **Proactive Browser Extension:** Functional PyScript-based scanner.
+- [x] **Mobile Background Service:** Python-based monitoring via PyJNIus.
+- [x] **CI/CD Pipeline:** Automated testing for the entire Python stack.
+
+### **Phase 2: Intelligence & Scale (CURRENT)**
+- [x] **Legal Knowledge Base:** Integration of GDPR, CCPA, and HIPAA frameworks.
+- [x] **Subscription System:** $1/mo Proactive Mode integration (Stripe/Flutterwave).
+- [x] **n8n Automation:** Pure Python workflows for policy change monitoring.
+- [ ] **Local LLM Support:** (Upcoming) Integration with Ollama for offline analysis.
+
+---
+
+## ⚠️ **Licenses**
+All core tools are **Open Source** (Apache 2.0, MIT, or BSD), ensuring the project remains transparent and community-driven.

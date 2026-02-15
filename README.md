@@ -1,33 +1,51 @@
 # 🛡️ Privacy Sentinel AI
 
-AI-powered privacy protection platform that intercepts data collection practices across Desktop and Mobile.
+Privacy Sentinel AI is an advanced, AI-driven privacy protection platform designed to intercept and analyze data collection practices across desktop and mobile environments. By providing real-time, proactive risk assessments, the platform empowers users to make informed decisions regarding their digital privacy **before** they interact with complex legal policies.
 
-**Created and maintained by [LOWKEYBANKS](https://github.com/LOWKEYBANKS) and Partner (https://github.com/Ms-Lorrah).**
-
-## 🚀 Dual-Platform Strategy
-
-### 💻 Desktop: The Web Extension
-The Desktop Web Extension (Chrome, Firefox, Opera, etc.) is built using **PyScript** and our **Pure Python Stack**. It operates as a robust, background-scanning tool that automatically analyzes every site you visit.
-- **Automated Scanning**: Analyzes policies using the backend AI as soon as a page loads.
-- **Full Transparency**: Provides detailed risk scores and summaries directly in the extension popup.
-- **Pure Python**: Leverages the open-source stack (FastAPI, Trafilatura, Playwright) for reliable analysis.
-
-### 📱 Mobile: Proactive Interception (Phone/Tablet/iPad)
-The Mobile experience is designed for **interception**. Using Android Accessibility Services, it monitors your browsing in the background and triggers a **real-time popup** before you interact with a site.
-- **Background Interception**: Detects when you land on a new site and scans it instantly.
-- **Decision Support**: The popup tells you exactly what to do—**"Accept Non-Essentials"** or **"Reject All"**—before you click the site's own consent buttons.
-- **Sustainable Protection**: This proactive monitoring is available for a **$1/month subscription**, ensuring high-quality AI analysis remains affordable and privacy-focused.
-
-## 🏗️ Technical Status
-- **Backend**: Live on Render.com (FastAPI + PostgreSQL + Redis).
-- **Web Extension**: MVP Complete and optimized for background auto-scanning.
-- **Mobile Background Service**: Logic implemented for URL interception and popup triggering.
-- **Subscription Engine**: Mock activation and status check logic integrated into the API.
-
-## 🛠️ Getting Started
-1. **Desktop**: Load the `browser-agent/` folder into your browser in Developer Mode.
-2. **Mobile**: The Flutter/Android logic is located in the `mobile/` directory, ready for compilation.
-3. **Backend**: Access the live API at `https://privacy-sentinel-api.onrender.com`.
+**Project Leads:** [LOWKEYBANKS](https://github.com/LOWKEYBANKS) & [Ms-Lorrah](https://github.com/Ms-Lorrah)
 
 ---
-Empowering you to make informed privacy decisions **before** you click "Accept."
+
+## 🏗️ **The Pure Python Vision**
+This project is built on a commitment to a **100% Pure Python Ecosystem**. We have eliminated all non-Python languages from our core logic—including JavaScript, Kotlin, and C++—to ensure maximum security, maintainability, and architectural elegance.
+
+| Component | Technology | Implementation |
+| :--- | :--- | :--- |
+| **Backend API** | FastAPI / PostgreSQL | High-performance, asynchronous analysis engine. |
+| **Browser Extension** | PyScript / WebAssembly | 100% Python logic running natively in the browser. |
+| **Mobile App** | Kivy / PyJNIus | Native background monitoring using pure Python. |
+| **Automation** | n8n / Python Nodes | Automated policy change detection workflows. |
+
+---
+
+## 🚀 **Cross-Platform Protection**
+
+### **Desktop: Proactive Browser Extension**
+The desktop extension serves as a robust sentinel for your browsing experience. Built entirely with **PyScript**, it executes sophisticated Python logic within the browser to proactively detect and analyze privacy policies on every site you visit.
+- **Automated Intelligence:** Scans and scores policies immediately upon page load.
+- **Transparent Risk Scoring:** Provides detailed breakdowns of data collection practices directly in the extension popup.
+- **Privacy-First Design:** Operates without the security overhead of traditional JavaScript extensions.
+
+### **Mobile: Background Interception & Alerts**
+The mobile application is engineered for **proactive interception** on Android and iOS. Utilizing a Python-based background service, it monitors system-level events to protect you across all applications.
+- **System-Level Monitoring:** Uses **PyJNIus** to interface with Accessibility APIs, detecting privacy risks in real-time.
+- **Proactive Popups:** Triggers high-risk alerts and guidance (e.g., "Reject All") before you accept a site's terms.
+- **Affordable Protection:** Proactive monitoring is available for a **$1/month subscription**, supporting the infrastructure needed for high-quality AI analysis.
+
+---
+
+## 🛠️ **Current Technical Status**
+- **Core API:** Fully operational on Render.com with integrated GPT-4o-mini analysis.
+- **Browser Extension:** V1.3.0 is optimized for proactive background auto-scanning.
+- **Mobile Service:** Python-native background logic is implemented for URL interception and alert triggering.
+- **Infrastructure:** CI/CD pipeline and database migrations are fully automated.
+
+---
+
+## 📖 **Documentation & Resources**
+- **[Tools & Technology Stack](docs/tools-and-technology-stack.md):** Deep dive into our open-source tools.
+- **[Mobile Background Logic](docs/mobile_background_logic.md):** Detailed implementation of our Python-native mobile strategy.
+- **[Cross-Platform Strategy](docs/cross_platform_strategy.md):** Our vision for a unified Python ecosystem.
+
+---
+*Empowering users to reclaim their privacy through pure Python intelligence.*
