@@ -1,4 +1,4 @@
-# 🛡️ Privacy Sentinel AI
+# 🛡️ Privacy Sentinel AI: Empowering Before You Click Accept
 
 Privacy Sentinel AI is an advanced, AI-driven privacy protection platform designed to intercept and analyze data collection practices across desktop and mobile environments. By providing real-time, proactive risk assessments, the platform empowers users to make informed decisions regarding their digital privacy **before** they interact with complex legal policies.
 
