@@ -8,7 +8,16 @@ import hashlib
 import logging
 import json
 import trafilatura
-from scrapers.playwright_scraper import scrape_dynamic_content
+try:
+    from scrapers.playwright_scraper import scrape_dynamic_content
+except ImportError:
+    try:
+        from agent.scrapers.playwright_scraper import scrape_dynamic_content
+    except ImportError:
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+        from scrapers.playwright_scraper import scrape_dynamic_content
 import os
 from datetime import datetime
 from typing import List, Optional
@@ -25,7 +34,10 @@ from langdetect import detect, DetectorFactory
 DetectorFactory.seed = 0
 
 # Import specialized legal knowledge
-from knowledge.legal_frameworks import LEGAL_FRAMEWORKS
+try:
+    from knowledge.legal_frameworks import LEGAL_FRAMEWORKS
+except ImportError:
+    from agent.knowledge.legal_frameworks import LEGAL_FRAMEWORKS
 
 # Configure secure logging
 logging.basicConfig(

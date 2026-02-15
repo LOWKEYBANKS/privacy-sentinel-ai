@@ -19,10 +19,17 @@ async def get_active_tab_content():
             tabs = await js.chrome.tabs.query({"active": True, "currentWindow": True})
             active_tab = tabs[0]
             
+            # Use a Python-defined function string for the content extraction
+            content_script = """
+            () => {
+                return document.body.innerText || "";
+            }
+            """
+            
             # Execute script to get body text
             result = await js.chrome.scripting.executeScript({
                 "target": {"tabId": active_tab.id},
-                "func": js.eval("(lambda: document.body.innerText)")
+                "func": js.eval(content_script)
             })
             return result[0].result
         else:
@@ -40,18 +47,21 @@ async def find_policy_links():
             active_tab = tabs[0]
             
             # Find links containing "policy", "privacy", or "cookie"
+            # Using a string literal for the JS function to maintain pure Python environment for the agent logic
+            link_detection_script = """
+            () => {
+                const links = Array.from(document.querySelectorAll('a'));
+                const policyLinks = links.filter(a => 
+                    /privacy|cookie|policy/i.test(a.innerText) || 
+                    /privacy|cookie|policy/i.test(a.href)
+                ).map(a => a.href);
+                return policyLinks;
+            }
+            """
+            
             result = await js.chrome.scripting.executeScript({
                 "target": {"tabId": active_tab.id},
-                "func": js.eval("""
-                    () => {
-                        const links = Array.from(document.querySelectorAll('a'));
-                        const policyLinks = links.filter(a => 
-                            /privacy|cookie|policy/i.test(a.innerText) || 
-                            /privacy|cookie|policy/i.test(a.href)
-                        ).map(a => a.href);
-                        return policyLinks;
-                    }
-                """)
+                "func": js.eval(link_detection_script)
             })
             return result[0].result
         return []

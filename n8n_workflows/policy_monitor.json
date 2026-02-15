@@ -39,10 +39,11 @@
     },
     {
       "parameters": {
-        "functionCode": "const crypto = require(\'crypto\');\nconst newHash = crypto.createHash(\'sha256\').update(items[0].json.data).digest(\'hex\').substring(0, 16);\nreturn [{ json: { ...items[0].json, new_hash: newHash } }];"
+        "language": "python",
+        "pythonCode": "import hashlib\n\n# Get data from the previous node\ndata = items[0].json.get('data', '')\n\n# Calculate SHA-256 hash (first 16 chars)\nnew_hash = hashlib.sha256(data.encode('utf-8')).hexdigest()[:16]\n\n# Return the updated item\nreturn [{'json': {**items[0].json, 'new_hash': new_hash}}]"
       },
       "name": "Calculate New Hash",
-      "type": "n8n-nodes-base.function",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [850, 300]
     },
