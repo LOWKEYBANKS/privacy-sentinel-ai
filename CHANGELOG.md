@@ -1,7 +1,13 @@
 # Changelog
 
-## [1.3.0] - 2026-02-15
+## [1.3.1] - 2026-02-15
+### **Added**
+- **Cookie Intelligence Engine:** Integrated explicit detection and summarization of cookie collection practices (Tracking, Marketing, Essential).
+- **"Empowering Before You Click Accept" Mission:** Re-branded all platforms (README, Browser Extension UI, Mobile App UI) to reflect the core mission.
+- **ePrivacy Directive Support:** Added specialized legal intelligence for the EU Cookie Law to the AI Knowledge Base.
+- **Cookie Profile UI:** Added a dedicated section in the browser extension popup to display real-time cookie intrusiveness data.
 
+## [1.3.0] - 2026-02-15
 ### **Added**
 - **100% Pure Python Ecosystem:** Successfully eliminated all JavaScript, Kotlin, and C++ source artifacts from the project logic.
 - **Proactive Mobile Monitoring:** Implemented a background service for Android using **PyJNIus** to interface with Accessibility APIs directly from Python.
@@ -19,7 +25,6 @@
 - **Deployment:** Optimized `render.yaml` for high-performance Python deployment on Render.com.
 
 ## v1.0.0 - 2026-02-12
-
 ### Added
 - **Mobile Money Integration:** Implemented a flexible payment gateway supporting M-Pesa and other mobile wallets via Flutterwave for $1/month subscriptions.
 - **Proactive "Interception" Flow:** Enhanced browser extension and mobile background service to proactively detect and analyze policies before user acceptance.
