@@ -27,10 +27,21 @@ class PrivacySentinelApp(App):
             font_size='32sp',
             bold=True,
             size_hint_y=None,
-            height=100,
+            height=80,
             color=get_color_from_hex("#FFFFFF")
         )
         layout.add_widget(header)
+
+        # Mission Statement
+        mission = Label(
+            text="Empowering you before you click accept",
+            font_size='14sp',
+            italic=True,
+            size_hint_y=None,
+            height=30,
+            color=get_color_from_hex("#BDC3C7")
+        )
+        layout.add_widget(mission)
         
         # Status Card (Real-time updates)
         self.status_label = Label(
