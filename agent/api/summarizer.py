@@ -8,6 +8,7 @@ import hashlib
 import logging
 import json
 import trafilatura
+import asyncio
 try:
     from scrapers.playwright_scraper import scrape_dynamic_content
 except ImportError:
@@ -64,7 +65,7 @@ if llm_mode == "production":
 
 app = FastAPI(
     title="Privacy Sentinel AI", 
-    version="1.3.0",
+    version="1.3.1",
     description="AI-powered privacy policy analysis with specialized legal intelligence and multi-language support"
 )
 
@@ -83,7 +84,11 @@ app.add_middleware(
 
 # Database connection
 def get_db_connection():
-    db_url = os.getenv("DATABASE_URL")
+    # Priority: Direct URL from user -> Environment Variable -> Local Dev
+    db_url = "postgresql://privacy_sentinel_db_user:6UqQqF22kALSPxdUeaMw4Py3hxTdTdaM@dpg-d66jahvgi27c738uuer0-a.oregon-postgres.render.com/privacy_sentinel_db"
+    if not db_url:
+        db_url = os.getenv("DATABASE_URL")
+        
     try:
         if db_url:
             conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
@@ -154,7 +159,7 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
             1. 'summary': A professional 2-sentence summary of privacy implications.
             2. 'cookie_summary': A specific breakdown of cookie types used (Tracking, Marketing, Essential) and their intrusiveness.
             3. 'risk_score': An overall integer from 0-100.
-            4. 'risk_breakdown': {'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}
+            4. 'risk_breakdown': {{'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}}
             5. 'risks': A list of specific risk categories.
             6. 'legal_violations': A list of potential violations against GDPR, CCPA, HIPAA, or ePrivacy (Cookie Law).
             7. 'recommended_action': Clear, actionable advice for the user.
@@ -266,7 +271,7 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "version": "1.3.0", "llm_mode": llm_mode}
+    return {"status": "healthy", "version": "1.3.1", "llm_mode": llm_mode}
 
 async def log_analysis_result(content_hash: str, risk_score: int, risk_count: int, client_ip: str):
     try:
@@ -277,6 +282,16 @@ async def log_analysis_result(content_hash: str, risk_score: int, risk_count: in
             
         cursor = conn.cursor()
         cursor.execute("""
+            CREATE TABLE IF NOT EXISTS analysis_audit_log (
+                id SERIAL PRIMARY KEY,
+                content_hash VARCHAR(16),
+                risk_score INTEGER,
+                risk_count INTEGER,
+                client_ip VARCHAR(45),
+                timestamp TIMESTAMP
+            )
+        """)
+        cursor.execute("""
             INSERT INTO analysis_audit_log (content_hash, risk_score, risk_count, client_ip, timestamp) 
             VALUES (%s, %s, %s, %s, %s)
         """, (content_hash, risk_score, risk_count, client_ip, datetime.now()))
@@ -285,6 +300,49 @@ async def log_analysis_result(content_hash: str, risk_score: int, risk_count: in
         conn.close()
     except Exception as e:
         logger.error(f"Audit log failed: {e}")
+
+# Python-Native Background Sentinel (Replacement for n8n)
+async def background_sentinel_task():
+    """Periodically crawls high-risk URLs to detect policy changes."""
+    logger.info("Background Sentinel Task Started.")
+    monitored_urls = [
+        "https://www.google.com/policies/privacy/",
+        "https://www.facebook.com/policy.php",
+        "https://twitter.com/en/privacy",
+        "https://www.tiktok.com/legal/privacy-policy"
+    ]
+    
+    while True:
+        for url in monitored_urls:
+            try:
+                logger.info(f"Sentinel checking: {url}")
+                content = await scrape_dynamic_content(url)
+                if content:
+                    content_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()[:16]
+                    # Check if hash already exists in DB to detect changes
+                    conn = get_db_connection()
+                    if conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT id FROM analysis_audit_log WHERE content_hash = %s LIMIT 1", (content_hash,))
+                        exists = cursor.fetchone()
+                        if not exists:
+                            logger.info(f"CHANGE DETECTED in {url}. Triggering re-analysis.")
+                            # Simulate analysis call
+                            await perform_specialized_analysis(content, "en")
+                            # Log the new state
+                            await log_analysis_result(content_hash, 0, 0, "sentinel-bot")
+                        cursor.close()
+                        conn.close()
+            except Exception as e:
+                logger.error(f"Sentinel check failed for {url}: {e}")
+        
+        # Wait for 1 hour before next check
+        await asyncio.sleep(3600)
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the background sentinel when the API launches."""
+    asyncio.create_task(background_sentinel_task())
 
 if __name__ == "__main__":
     import uvicorn
