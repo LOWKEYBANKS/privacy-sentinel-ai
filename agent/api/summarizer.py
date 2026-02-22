@@ -40,6 +40,12 @@ try:
 except ImportError:
     from agent.knowledge.legal_frameworks import LEGAL_FRAMEWORKS
 
+# Local LLM Support
+try:
+    from .local_llm import LocalLLMClient, is_local_llm_available
+except ImportError:
+    from agent.api.local_llm import LocalLLMClient, is_local_llm_available
+
 # Configure secure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -60,12 +66,16 @@ class SecurityConfig:
 # LLM Client Setup
 llm_mode = os.getenv("LLM_MODE", "development")
 client = None
+local_client = None
+
 if llm_mode == "production":
     client = OpenAI()
+elif llm_mode == "local":
+    local_client = LocalLLMClient(base_url=os.getenv("LOCAL_LLM_URL", "http://localhost:11434"))
 
 app = FastAPI(
     title="Privacy Sentinel AI", 
-    version="1.3.1",
+    version="1.3.2",
     description="AI-powered privacy policy analysis with specialized legal intelligence and multi-language support"
 )
 
@@ -84,10 +94,11 @@ app.add_middleware(
 
 # Database connection
 def get_db_connection():
-    # Priority: Direct URL from user -> Environment Variable -> Local Dev
-    db_url = "postgresql://privacy_sentinel_db_user:6UqQqF22kALSPxdUeaMw4Py3hxTdTdaM@dpg-d66jahvgi27c738uuer0-a.oregon-postgres.render.com/privacy_sentinel_db"
+    # Priority: Environment Variable -> Direct URL -> Local Dev
+    db_url = os.getenv("DATABASE_URL")
     if not db_url:
-        db_url = os.getenv("DATABASE_URL")
+        # Fallback to hardcoded URL if provided previously (caution: should be in env)
+        db_url = "postgresql://privacy_sentinel_db_user:6UqQqF22kALSPxdUeaMw4Py3hxTdTdaM@dpg-d66jahvgi27c738uuer0-a.oregon-postgres.render.com/privacy_sentinel_db"
         
     try:
         if db_url:
@@ -140,35 +151,46 @@ class PrivacyAnalysisResponse(BaseModel):
 # AI Analysis Logic
 async def perform_specialized_analysis(text: str, language: str) -> dict:
     """Perform specialized legal analysis using LLM and the Knowledge Base."""
+    knowledge_context = json.dumps(LEGAL_FRAMEWORKS, indent=2)
+    
+    # Use Trafilatura to extract main content from the HTML snippet
+    extracted_text = trafilatura.extract(text, output_format='text', include_comments=False, include_tables=False)
+    if not extracted_text:
+        extracted_text = text # Fallback to raw text if extraction fails
+
+    system_prompt = "You are a Privacy Sentinel AI specialized in global data regulations. Analyze the following privacy policy snippet."
+    prompt = f"""
+    Analyze the following privacy policy snippet (Language: {language}).
+    
+    Use this Legal Knowledge Base for reference:
+    {knowledge_context}
+    
+    Provide a JSON response with:
+    1. 'summary': A professional 2-sentence summary of privacy implications.
+    2. 'cookie_summary': A specific breakdown of cookie types used (Tracking, Marketing, Essential) and their intrusiveness.
+    3. 'risk_score': An overall integer from 0-100.
+    4. 'risk_breakdown': {{'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}}
+    5. 'risks': A list of specific risk categories.
+    6. 'legal_violations': A list of potential violations against GDPR, CCPA, HIPAA, or ePrivacy (Cookie Law).
+    7. 'recommended_action': Clear, actionable advice for the user.
+
+    Snippet: {extracted_text[:4000]}
+    """
+
+    # 1. Local LLM Mode
+    if llm_mode == "local" and local_client:
+        logger.info("Using Local LLM for analysis.")
+        analysis = await local_client.analyze_text(prompt, system_prompt)
+        if analysis:
+            return analysis
+
+    # 2. Production OpenAI Mode
     if llm_mode == "production" and client:
         try:
-            knowledge_context = json.dumps(LEGAL_FRAMEWORKS, indent=2)
-            
-            # Use Trafilatura to extract main content from the HTML snippet
-            extracted_text = trafilatura.extract(text, output_format='text', include_comments=False, include_tables=False)
-            if not extracted_text:
-                extracted_text = text # Fallback to raw text if extraction fails
-
-            prompt = f"""
-            You are a specialized Privacy Legal Expert. Analyze the following privacy policy snippet (Language: {language}).
-            
-            Use this Legal Knowledge Base for reference:
-            {knowledge_context}
-            
-            Provide a JSON response with:
-            1. 'summary': A professional 2-sentence summary of privacy implications.
-            2. 'cookie_summary': A specific breakdown of cookie types used (Tracking, Marketing, Essential) and their intrusiveness.
-            3. 'risk_score': An overall integer from 0-100.
-            4. 'risk_breakdown': {{'data_collection': 0-100, 'third_party_sharing': 0-100, 'user_rights': 0-100, 'data_retention': 0-100}}
-            5. 'risks': A list of specific risk categories.
-            6. 'legal_violations': A list of potential violations against GDPR, CCPA, HIPAA, or ePrivacy (Cookie Law).
-            7. 'recommended_action': Clear, actionable advice for the user.
-
-            Snippet: {extracted_text[:4000]}
-            """
+            logger.info("Using Production OpenAI for analysis.")
             response = client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[{"role": "system", "content": "You are a Privacy Sentinel AI specialized in global data regulations."},
+                model="gpt-4o-mini",
+                messages=[{"role": "system", "content": system_prompt},
                           {"role": "user", "content": prompt}],
                 response_format={"type": "json_object"}
             )
@@ -176,7 +198,8 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
         except Exception as e:
             logger.error(f"Specialized LLM Analysis failed: {e}")
     
-    # Fallback / Development Mode
+    # 3. Fallback / Development Mode
+    logger.warning("Using Fallback analysis logic.")
     risks = detect_privacy_risks_fallback(text)
     score = calculate_risk_score_fallback(risks)
     return {
@@ -189,7 +212,7 @@ async def perform_specialized_analysis(text: str, language: str) -> dict:
             "data_retention": 30
         },
         "risks": risks,
-        "legal_violations": ["Specialized analysis requires production mode"],
+        "legal_violations": ["Specialized analysis requires production or local mode"],
         "recommended_action": "Review manually as this is a development-level assessment."
     }
 
@@ -271,7 +294,7 @@ async def analyze_privacy_policy(request: PrivacyAnalysisRequest, background_tas
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "version": "1.3.1", "llm_mode": llm_mode}
+    return {"status": "healthy", "version": "1.3.2", "llm_mode": llm_mode}
 
 async def log_analysis_result(content_hash: str, risk_score: int, risk_count: int, client_ip: str):
     try:
